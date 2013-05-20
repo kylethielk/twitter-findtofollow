@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<head>
+    <title>Twitter - FindToFollow</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="./js/findtofollow.js"></script>
+    <link rel="stylesheet" href="css/findtofollow.css" media="all"/>
+</head>
+<body class="elements">
+
+<div id="wrapper">
+    <div id="leftColumn">
+        <div class="content-block">
+            <h2>Required Fields</h2>
+            <label for="twitterUsername">Your Twitter Username:</label>
+            <input type="text" id="twitterUsername" placeholder="kylethielk" title="Your username on twitter."
+                   class="medium-input"/>
+            <label for="sourceUsername">Follower Source Username:</label>
+            <input type="text" id="sourceUsername" placeholder="patio11"
+                   title="Username of person whose follower list we will pull users from." class="medium-input"/>
+            <label for="followerLimit">Max Follower Count:</label>
+            <input type="text" id="followerLimit" title="Maximum number of followers to pull."
+                   class="medium-input" placeholder="200"/>
+
+            <h2>Filter Followers</h2>
+
+            <p class="sub-text">All fields optional.</p>
+            <label for="minimumFollowers">Minimum Followers:</label>
+            <input type="text" id="minimumFollowers" title="Minimum number of followers person must have." value=""
+                   class="medium-input"/>
+            <label for="maximumFollowers">Maximum Followers:</label>
+            <input type="text" id="maximumFollowers" title="Maximum number of followers person must have." value=""
+                   class="medium-input"/>
+            <label for="minimumFriends">Minimum Friends:</label>
+            <input type="text" id="minimumFriends" title="Minimum number of friends person must have." value=""
+                   class="medium-input"/>
+            <label for="maximumFriends">Maximum Friends:</label>
+            <input type="text" id="maximumFriends" title="Maximum number of friends person must have." value=""
+                   class="medium-input"/>
+            <label for="friendToFollowerRatio" style="display:block">Follower/Friend Ratio:</label>
+            <select id="friendToFollowerRatio">
+                <option value="doesNotMatter">Does Not Matter</option>
+                <option value="friendsGreaterThanFollowers">Friends Greater Than Followers</option>
+                <option value="followersGreaterThanFriends">Followers Greater Than Friends</option>
+            </select>
+            <label for="keywords" style="display:block">Comma Separated Keywords:</label>
+            <textarea id="keywords" title="Used to search user's bio."></textarea>
+        </div>
+    </div>
+    <div id="rightColumn">
+        <div class="content-block" style="min-height: 669px">
+            <h1> Twitter FindToFollow</h1>
+
+            <p>
+                This application is simple, it helps filter people that you could potentially want to filter based on
+                keywords
+                in
+                their bio and their follower/friend counts. Currently the source of people to follow is the follower
+                list of
+                one
+                user. I recommend
+                finding a person who has a lot of followers and who has interests similar to the people you are trying
+                to
+                find.
+            </p>
+
+            <input type="button" value="Filter Followers" id="sendRequestBtn"
+                   onclick="FindToFollow.sendRequest();return false;"/>
+            <br/>
+            <img id="loadingImage" src="./images/ajax-loader.gif" style="display: none"/>
+
+            <div id="logContainer" style="display: none">
+                <a href="javascript:void(0);" id="logVisibilityLink" onclick="FindToFollow.toggleLogVisibility()">Show
+                    Log</a>
+
+                <div id="logText"></div>
+            </div>
+
+            <div id="results">
+
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+</body>
+</html>

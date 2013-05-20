@@ -1,0 +1,154 @@
+body {
+    background-color: rgb(231, 231, 231);
+    font-family: "Georgia";
+    font-size: 0.9em;
+}
+
+h1 {
+    font-size: 1.2em;
+    text-shadow: 2px 2px rgba(216, 216, 216, 0.6);
+    color: rgb(56, 56, 56);
+    margin-top: 0;
+}
+
+h2 {
+    margin: 15px 0 11px 0;
+    font-size: 0.75em;
+    text-shadow: 2px 2px rgba(216, 216, 216, 0.6);
+    color: rgb(56, 56, 56);
+
+}
+
+div {
+    margin: 8px;
+}
+
+#wrapper {
+    width: 920px;
+    margin: 0 auto;
+}
+
+#leftColumn {
+    width: 275px;
+    float: left;
+    margin: 2px;
+}
+
+#leftColumn input,
+#leftColumn select {
+    margin: 10px 0 0 12px;
+}
+
+#leftColumn textarea {
+    width: 202px;
+    height: 75px;
+    margin: 15px 2px 0 12px;
+}
+
+#leftColumn label {
+    display: block;
+    margin: 10px 0 0 5px;
+}
+
+#rightColumn {
+    width: 635px;
+    float: left;
+    margin: 2px;
+}
+
+.content-block {
+    border-radius: 5px;
+    background-color: #FEFEFE;
+    padding: 15px;
+    border: 1px solid rgb(216, 216, 216);
+    min-height: 60px;
+    margin: 0 0 15px 0;
+}
+
+.content-block label {
+    color: rgb(112, 112, 112);
+    font-size: 0.9em;
+}
+
+.one-column-float {
+    float: left;
+    width: 100%;
+    text-align: left;
+    margin: 10px 21px;
+}
+
+.two-column-float {
+    float: left;
+    width: 48%;
+    text-align: center;
+    margin: 0;
+}
+
+.three-column-float {
+    float: left;
+    width: 33%;
+    text-align: center;
+
+    margin: 0;
+}
+
+.four-column-float {
+    float: left;
+    width: 25%;
+    text-align: center;
+
+    margin: 0;
+}
+
+input {
+    margin-left: 5px;
+}
+
+.small-input {
+    width: 45px;
+}
+
+.medium-input {
+    width: 80px;
+}
+
+.sub-text {
+    font-size: 0.6em;
+    color: #474747;
+    margin: 2px 0 2px 15px;
+}
+
+.input-error {
+    border: 1px solid red;
+}
+
+#logContainer {
+    border-radius: 5px;
+    padding: 15px;
+    border: 1px solid rgb(216, 216, 216);
+    margin: 5px;
+}
+
+.user-table {
+    border-width: 0 0 1px 0;
+    border-color: #CCC;
+    border-style: solid;
+}
+.user-table .picture-td
+{
+    width: 50px;
+}
+.user-table .number-td
+{
+    width: 20px;
+}
+.user-table td {
+    padding: 4px;
+}
+.user-table img {
+    border-radius: 6px;
+}
+#loadingImage {
+    float: right;
+    margin:-24px 0 7px 0;
+}
