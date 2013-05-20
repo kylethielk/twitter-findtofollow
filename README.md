@@ -7,19 +7,23 @@ Written to automate the task of finding interesting and similar users that are l
 
 The application caches user profile information to cut down on Twitter API calls and network traffic. All caching is done on the local file system as I explicity wanted to avoid any reliance on a DB.
 
-The application also keeps track of users that you are following and those that you have followed in the past (but are no longer following) to avoid re-following. Unfortunately Twitter does not expose a service to get a list of all people you have followed in the past, so this feature only works on users you have followed and then unfollowed while using this app.
+The application also keeps track of users that you are following and those that you have followed in the past (but are no longer following) to avoid re-following. Unfortunately Twitter does not expose a service to get a list of all people you have followed in the past, so this feature only works on users you have followed and then unfollowed while using this application.
 
 Instructions
 ------------
 
+Assuming you have a server capable of running php, the only non-standard requirement is that cURL is installed and activated. Personally I've been running [WAMP Server](http://www.wampserver.com/).
 
+We must then add our Twitter OAuth keys in FindToFollow.php.
+
+Then simply load index.html in your browser and let the application do the rest.
 
 Limitations
 -----------
 
-This first pass is fully functional but is void of error checking. So far it has only been used for personal use on a local webserver so is lacking is basic security checks, input validation  etc..
+This first pass is fully functional but is void of error checking. So far it has only been used for personal use on a local webserver so is lacking in basic security checks, input validation  etc..
 
-Currently each filtered user is presented with their basic information and a link to open their twitter profile where you can then follow the user. The next iteration will allow you to follow them directly from the app, rather than having to visit their profile page.
+Currently each filtered user is presented with their basic information and a link to open their twitter profile where you can then follow the user. The next iteration will allow you to follow them directly from the application, rather than having to visit their profile page.
 
 ![twitter-findtofollow Screenshot](https://github.com/kylethielk/twitter-findtofollow/blob/master/images/screenshot.png?raw=true)
 
