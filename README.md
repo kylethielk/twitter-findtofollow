@@ -9,6 +9,8 @@ The application caches user profile information to cut down on Twitter API calls
 
 The application also keeps track of users that you are following and those that you have followed in the past (but are no longer following) to avoid re-following. Unfortunately Twitter does not expose a service to get a list of all people you have followed in the past, so this feature only works on users you have followed and then unfollowed while using this application.
 
+![twitter-findtofollow Screenshot](https://github.com/kylethielk/twitter-findtofollow/blob/master/images/screenshot.png?raw=true)
+
 Instructions
 ------------
 
@@ -25,7 +27,6 @@ This first pass is fully functional but is void of error checking. So far it has
 
 Currently each filtered user is presented with their basic information and a link to open their twitter profile where you can then follow the user. The next iteration will allow you to follow them directly from the application, rather than having to visit their profile page.
 
-![twitter-findtofollow Screenshot](https://github.com/kylethielk/twitter-findtofollow/blob/master/images/screenshot.png?raw=true)
 
 License (MIT)
 -------------
