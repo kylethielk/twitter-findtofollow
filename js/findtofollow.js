@@ -57,7 +57,7 @@ var FindToFollow = new function()
         var requestObject = this.buildRequestObject();
         requestObject.action = "run";
 
-        $("#sendRequestBtn").attr('disabled', 'disabled');
+        $("#sendRequestBtn").attr("disabled", "disabled");
 
         if (this.validateRequest(requestObject))
         {
@@ -82,6 +82,7 @@ var FindToFollow = new function()
                     {
                         $("#results").addClass("error-message");
                         $("#results").html("Error occurred: " + response.errorMessage);
+                        _this.maximizeLog();
                     }
                     else
                     {
@@ -95,14 +96,14 @@ var FindToFollow = new function()
                 })
                 .always(function()
                 {
-                    $("#sendRequestBtn").removeAttr('disabled');
+                    $("#sendRequestBtn").removeAttr("disabled");
                     $("#loadingImage").hide();
                     _this.unObscureResults();
                 });
         }
         else
         {
-            $("#sendRequestBtn").removeAttr('disabled');
+            $("#sendRequestBtn").removeAttr("disabled");
         }
     };
     /**

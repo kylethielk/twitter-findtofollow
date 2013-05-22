@@ -3,7 +3,6 @@
  * Author: Kyle Thielk (www.kylethielk.com)
  * License:
  * Copyright (c) 2013 Kyle Thielk
-
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -106,8 +105,11 @@ class FTF_Driver
 
         $friendIdResponse = json_decode($response);
 
+        $this->addLogMessage('You have ' . ($friendIdResponse && $friendIdResponse->ids ? count($friendIdResponse->ids) : 0) . ' friends according to twitter.');
+
         $this->userData->mergeInFriendIds($friendIdResponse->ids);
         $this->userData->flushPrimaryUserData();
+
 
     }
 
@@ -149,7 +151,7 @@ class FTF_Driver
         $this->potentialFriendIds = array_diff($this->potentialFriendIds, $this->userData->friendIds);
         $after_remove_count = count($this->potentialFriendIds);
 
-        $this->logArray[] = 'Removed a total of ' . ($before_remove_count - $after_remove_count) . ' people because you are already following them.<br />';
+        $this->addLogMessage('Removed a total of ' . ($before_remove_count - $after_remove_count) . ' people because you are already following them.');
     }
 
     /**
@@ -175,7 +177,7 @@ class FTF_Driver
             }
         }
 
-        $this->logArray[] = 'Out of ' . count($ids) . ' we had ' . count($returnObject->cachedUserIds) . ' cached. <br />';
+        $this->addLogMessage('Pulling fresh profiles for ' . count($returnObject->freshUserIds) . ' users from twitter. Had ' . count($returnObject->cachedUserIds) . ' cached.');
 
         return $returnObject;
     }
@@ -409,6 +411,15 @@ class FTF_Driver
 
         return $string;
 
+    }
+
+    /**
+     * Add a message to the log.
+     * @param $message String The message to add to the log.
+     */
+    public function addLogMessage($message)
+    {
+        $this->logArray[] = $message . '<br />';
     }
 }
 

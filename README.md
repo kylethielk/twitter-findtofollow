@@ -27,6 +27,12 @@ This first pass is fully functional but is void of error checking. So far it has
 
 Currently each filtered user is presented with their basic information and a link to open their twitter profile where you can then follow the user. The next iteration will allow you to follow them directly from the application, rather than having to visit their profile page.
 
+Credit
+------
+
+Extensive use of TwitterApiExchange library from James Mallison. Code found [here](http://github.com/j7mbo/twitter-api-php).
+
+For tracking performance of API calls the timer library from David Zoli is used. Code [here](https://github.com/davidzoli/php-timer-class).
 
 License (MIT)
 -------------

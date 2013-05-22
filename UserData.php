@@ -3,7 +3,6 @@
  * Author: Kyle Thielk (www.kylethielk.com)
  * License:
  * Copyright (c) 2013 Kyle Thielk
-
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -132,8 +131,17 @@ class FTF_UserData
      */
     public function mergeInFriendIds($friendIds)
     {
+        $previousCount = count($this->friendIds);
         $this->friendIds = array_merge($this->friendIds, $friendIds);
+
         $this->friendIds = array_unique($this->friendIds);
+
+        $currentCount = count($this->friendIds);
+
+        if ($previousCount != $currentCount)
+        {
+            FTF_Web::$currentDriver->addLogMessage('You have ' . ($currentCount - $previousCount) . ' new friends since last time.');
+        }
     }
 
     /**
@@ -142,6 +150,13 @@ class FTF_UserData
     public function flushPrimaryUserData()
     {
         $primaryFileName = './userdata/' . $this->twitterUsername . '.json';
+
+        if (!isset($this->friendIds))
+        {
+            $this->friendIds = array();
+            FTF_Web::$currentDriver->addLogMessage("Cannot flush primary data to filesystem. Error occurred.");
+            return;
+        }
 
         $toWrite = (Object)array();
         $toWrite->friendIds = $this->friendIds;
@@ -175,8 +190,18 @@ class FTF_UserData
     {
         $filename = './userdata/cacheduserlist.json';
         $filePointer = fopen($filename, 'w');
+
+        if (!isset($this->cachedUserIds))
+        {
+            $this->cachedUserIds = array();
+            FTF_Web::$currentDriver->addLogMessage("Cannot flush primary data to filesystem. Error occurred.");
+            return;
+        }
+
         $toWrite = (Object)array();
         $toWrite->userIds = $this->cachedUserIds;
+
+
         fwrite($filePointer, json_encode($toWrite));
         fclose($filePointer);
     }
@@ -201,4 +226,5 @@ class FTF_UserData
         return $users;
     }
 }
+
 ?>

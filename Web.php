@@ -4,7 +4,6 @@
  * Author: Kyle Thielk (www.kylethielk.com)
  * License:
  * Copyright (c) 2013 Kyle Thielk
-
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -35,6 +34,10 @@ require_once('Driver.php');
 class FTF_Web
 {
     const ACTION_RUN = 'run';
+    /**
+     * @var FTF_Driver
+     */
+    static public $currentDriver = null;
 
     /**
      * Execute the ajax request.
@@ -71,6 +74,11 @@ class FTF_Web
         else
         {
             $findToFollow = new FTF_Driver($apiKeys, $settings);
+
+            FTF_Web::$currentDriver = $findToFollow;
+
+            set_error_handler(array('FTF_Web', 'errorHandler'));
+
             $findToFollow->buildFriendIds();
             $findToFollow->buildFollowerIds();
             $findToFollow->buildFilteredFollowers();
@@ -98,16 +106,33 @@ class FTF_Web
     /**
      * Write response to browser and mark it as having an error.
      * @param $errorMessage String The error message to write.
+     * @param $log String Optional.
+     *
      */
-    public static function writeErrorResponse($errorMessage)
+    public static function writeErrorResponse($errorMessage, $log = '')
     {
         $response = new FTF_WebResponse();
         $response->hasError = true;
         $response->errorMessage = $errorMessage;
+        $response->log = $log;
 
         echo json_encode($response);
         exit(3);
 
+    }
+
+    public static function errorHandler($errno, $errstr, $errfile, $errline)
+    {
+        if (!(error_reporting() & $errno))
+        {
+            // This error code is not included in error_reporting
+            return false;
+        }
+
+        FTF_Web::writeErrorResponse('Unknown error happened. Error Message [' . $errstr . '] at ' . $errfile . ' (' . $errline . ')', FTF_Web::$currentDriver->generateLog());
+
+        /* Don't execute PHP internal error handler */
+        return true;
     }
 
 }
