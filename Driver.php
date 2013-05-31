@@ -105,10 +105,19 @@ class FTF_Driver
 
         $friendIdResponse = json_decode($response);
 
-        $this->addLogMessage('You have ' . ($friendIdResponse && $friendIdResponse->ids ? count($friendIdResponse->ids) : 0) . ' friends according to twitter.');
+        $errorMessage = $this->checkForTwitterErrors($friendIdResponse);
+        if ($errorMessage === false)
+        {
+            $this->addLogMessage('You have ' . ($friendIdResponse && $friendIdResponse->ids ? count($friendIdResponse->ids) : 0) . ' friends according to twitter.');
 
-        $this->userData->mergeInFriendIds($friendIdResponse->ids);
-        $this->userData->flushPrimaryUserData();
+            $this->userData->mergeInFriendIds($friendIdResponse->ids);
+            $this->userData->flushPrimaryUserData();
+        }
+        else
+        {
+            $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
+            FTF_Web::writeErrorResponse($errorMessage, $this->generateLog());
+        }
 
 
     }
@@ -138,7 +147,18 @@ class FTF_Driver
 
         $this->timer->add_cp('End: Building Follower Ids ');
 
-        $this->potentialFriendIds = $followerIdResponse->ids;
+        $errorMessage = $this->checkForTwitterErrors($followerIdResponse);
+        if ($errorMessage === false)
+        {
+            $this->potentialFriendIds = $followerIdResponse->ids;
+        }
+        else
+        {
+            $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
+            FTF_Web::writeErrorResponse($errorMessage, $this->generateLog());
+        }
+
+
     }
 
     /**
@@ -203,7 +223,6 @@ class FTF_Driver
                 'user_id' => $ids_string,
             );
 
-
             $random = rand(0, 15000);
             $this->timer->add_cp('Start: Get User Information - ' . $random);
 
@@ -214,15 +233,25 @@ class FTF_Driver
 
             $this->timer->add_cp('End: Get User Information - ' . $random);
 
-
             $users = json_decode($response);
 
-            //Write new data to cache.
-            foreach ($users as $user)
+            $errorMessage = $this->checkForTwitterErrors($users);
+            if ($errorMessage === false)
             {
-                $this->userData->writeUserToCache($user);
+                //Write new data to cache.
+                foreach ($users as $user)
+                {
+                    $this->userData->writeUserToCache($user);
+                }
+                $this->userData->flushUserListCache();
             }
-            $this->userData->flushUserListCache();
+            else
+            {
+                $users = array();
+                $this->addLogMessage("We received a bad response from twitter111: " . $errorMessage);
+            }
+
+
         }
 
         return $users;
@@ -248,6 +277,7 @@ class FTF_Driver
         {
             //Get subset of user ids to fetch full profiles for, twitter limits this call to 100 per call.
             $ids = array_slice($this->potentialFriendIds, $offset, $limit);
+
 
             //Get a list of fresh and cached ids, so we don't fetch profiles for people we already have
             $idObject = $this->breakIdsByCached($ids);
@@ -410,6 +440,28 @@ class FTF_Driver
         ob_end_clean();
 
         return $string;
+
+    }
+
+    /**
+     * Checks response for errors and returns string if has error. false otherwise.
+     * @param $response Object The response object received from Twitter that contains errors.
+     * @return String the error messages.
+     */
+    public function checkForTwitterErrors($response)
+    {
+        if ($response && isset($response->errors))
+        {
+            $errors = $response->errors;
+            $message = '';
+            foreach ($errors as $error)
+            {
+                $message = $message . $error->message . '<br />';
+            }
+            return $message;
+        }
+
+        return false;
 
     }
 

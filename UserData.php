@@ -77,7 +77,7 @@ class FTF_UserData
             fclose($primaryFilePointer);
 
             $readObject = json_decode($read);
-            $this->friendIds = $readObject->friendIds;
+            $this->friendIds = (array)$readObject->friendIds;
         }
     }
 
@@ -131,16 +131,19 @@ class FTF_UserData
      */
     public function mergeInFriendIds($friendIds)
     {
-        $previousCount = count($this->friendIds);
-        $this->friendIds = array_merge($this->friendIds, $friendIds);
+        $this->friendIds = array_values($this->friendIds);
+        $friendIds = array_values($friendIds);
 
-        $this->friendIds = array_unique($this->friendIds);
+        $previousCount = count($this->friendIds);
+
+        $diff = array_diff($friendIds, $this->friendIds);
+        $this->friendIds = array_merge($this->friendIds, array_unique($diff));
 
         $currentCount = count($this->friendIds);
 
         if ($previousCount != $currentCount)
         {
-            FTF_Web::$currentDriver->addLogMessage('You have ' . ($currentCount - $previousCount) . ' new friends since last time.');
+            FTF_Web::$currentDriver->addLogMessage('Cached friend count: ' . $previousCount . '. New friend count: ' . $currentCount);
         }
     }
 
