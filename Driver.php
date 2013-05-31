@@ -241,14 +241,15 @@ class FTF_Driver
                 //Write new data to cache.
                 foreach ($users as $user)
                 {
-                    $this->userData->writeUserToCache($user);
+                    $friend = new FTF_Friend($user);
+                    $this->userData->writeUserToCache($friend);
                 }
                 $this->userData->flushUserListCache();
             }
             else
             {
                 $users = array();
-                $this->addLogMessage("We received a bad response from twitter111: " . $errorMessage);
+                $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
             }
 
 

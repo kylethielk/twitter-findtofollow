@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+require_once 'Friend.php';
+
 /**
  * Class with functions to write/read from our cached data.
  * Class FTF_UserData
@@ -79,10 +81,11 @@ class FTF_UserData
             $readObject = json_decode($read);
             $this->friendIds = (array)$readObject->friendIds;
         }
+
     }
 
     /**
-     * Initialze the list of cached users we have.
+     * Initialize the list of cached users we have.
      */
     private function initializeCachedUserIdList()
     {
@@ -108,18 +111,20 @@ class FTF_UserData
     }
 
     /**
-     * @return Boolean True if already exists, false if had to be created.
+     * Initializes the user data directory.
      */
     private function initializeUserDataDirectory()
     {
-        if (is_dir('./userdata') === false)
+        $mainDirectory = './userdata';
+        if (is_dir($mainDirectory) === false)
         {
-            mkdir('./userdata');
-            return false;
+            mkdir($mainDirectory);
         }
-        else
+
+        $userDirectory = $mainDirectory . '/users';
+        if (is_dir($userDirectory) === false)
         {
-            return true;
+            mkdir($userDirectory);
         }
 
     }
@@ -171,18 +176,15 @@ class FTF_UserData
 
     /**
      * Writer user to our cache. Don't forget to call flushUserListCache.
-     * @param $user Object The JSON User object received from twitter to write.
+     * @param $friend FTF_Friend The JSON User object received from twitter to write.
      */
-    public function writeUserToCache($user)
+    public function writeUserToCache($friend)
     {
-        $userFilePointer = fopen('./userdata/' . $user->id . '.json', 'w');
-        $toWrite = (Object)Array();
-        $toWrite->downloadDate = time();
-        $toWrite->user = $user;
-        fwrite($userFilePointer, json_encode($toWrite));
+        $userFilePointer = fopen('./userdata/users/' . $friend->userData->id . '.json', 'w');
+        fwrite($userFilePointer, json_encode($friend));
         fclose($userFilePointer);
 
-        $this->cachedUserIds[] = $user->id;
+        $this->cachedUserIds[] = $friend->userData->id;
     }
 
     /**
@@ -219,12 +221,12 @@ class FTF_UserData
         $users = array();
         foreach ($userIds as $userId)
         {
-            $filename = './userdata/' . $userId . '.json';
+            $filename = './userdata/users/' . $userId . '.json';
             $filePointer = fopen($filename, 'r');
             $data = fread($filePointer, filesize($filename));
             $dataObject = json_decode($data);
 
-            $users[] = $dataObject->user;
+            $users[] = $dataObject->userData;
         }
         return $users;
     }
