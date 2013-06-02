@@ -30,9 +30,9 @@ require_once('UserData.php');
  * buildFollowerIds();
  * buildFilteredFollowers();
  *
- * Class FTF_Driver
+ * Class FTF_Filter
  */
-class FTF_Driver
+class FTF_Filter
 {
 
     /**
@@ -72,7 +72,7 @@ class FTF_Driver
      * @param $apiKeys array .
      * @param $webRequest FTF_FilterRequest .
      */
-    public function FTF_Driver($apiKeys, $webRequest)
+    public function FTF_Filter($apiKeys, $webRequest)
     {
         $this->apiKeys = $apiKeys;
         $this->webRequest = $webRequest;
@@ -260,7 +260,7 @@ class FTF_Driver
 
     /**
      * Once buildFriendIds and buildFollowerIds have been called, call this function
-     * to filter the results. FTF_Driver->filteredUsers will hold the results.
+     * to filter the results. FTF_Filter->filteredUsers will hold the results.
      */
     public function buildFilteredFollowers()
     {

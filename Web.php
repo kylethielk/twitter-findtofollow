@@ -25,7 +25,7 @@
 
 require_once('FilterRequest.php');
 require_once('WebResponse.php');
-require_once('Driver.php');
+require_once('Filter.php');
 
 /**
  * Executes AJAX requests from html file.
@@ -36,7 +36,7 @@ class FTF_Web
     const ACTION_RUN = 'run';
     const ACTION_FOLLOW = 'follow';
     /**
-     * @var FTF_Driver
+     * @var FTF_Filter
      */
     static public $currentDriver = null;
 
@@ -65,6 +65,13 @@ class FTF_Web
     private static function followUser($data)
     {
         sleep(2);
+        $request = new FTF_FollowRequest($data);
+
+        if (!isset($request) || !$request->validate())
+        {
+            FTF_Web::writeErrorResponse('Follow Request invalid or not supplied.' . print_r($request, true));
+        }
+
         FTF_Web::writeValidResponse(print_r($data, true), "");
     }
 
@@ -84,7 +91,7 @@ class FTF_Web
         }
         else
         {
-            $findToFollow = new FTF_Driver($apiKeys, $settings);
+            $findToFollow = new FTF_Filter($apiKeys, $settings);
 
             FTF_Web::$currentDriver = $findToFollow;
 
