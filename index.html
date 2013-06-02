@@ -14,13 +14,14 @@
             <h2>Required Fields</h2>
             <label for="twitterUsername">Your Twitter Username:</label>
             <input type="text" id="twitterUsername" placeholder="kylethielk" title="Your username on twitter."
-                   class="medium-input"/>
+                   class="medium-input" value="kylethielk"/>
             <label for="sourceUsername">Follower Source Username:</label>
             <input type="text" id="sourceUsername" placeholder="patio11"
-                   title="Username of person whose follower list we will pull users from." class="medium-input"/>
+                   title="Username of person whose follower list we will pull users from." class="medium-input"
+                   value="patio11"/>
             <label for="followerLimit">Max Follower Count:</label>
             <input type="text" id="followerLimit" title="Maximum number of followers to pull."
-                   class="medium-input" placeholder="200"/>
+                   class="medium-input" placeholder="200" value="10"/>
 
             <h2>Filter Followers</h2>
 
@@ -65,7 +66,7 @@
             </p>
 
             <input type="button" value="Filter Followers" id="sendRequestBtn"
-                   onclick="FindToFollow.sendRequest();return false;"/>
+                   onclick="FindToFollow.sendFilterRequest();return false;"/>
             <br/>
             <img id="loadingImage" src="./images/ajax-loader.gif" style="display: none"/>
 
@@ -76,11 +77,44 @@
                 <div id="logText"></div>
             </div>
 
+
             <div id="results">
 
             </div>
         </div>
 
+
+    </div>
+</div>
+
+<div id="dialogBackground" style="display: none">
+    <div id="dialogContent">
+
+        <h1>Follow Interval Settings</h1>
+
+        <p>Rather than following all in one blast, we will spread out the follows to hopefully avoid Twitter's Spam
+            filters. Set the time between each follow below.</p>
+
+        <div id="followSettings">
+            <label for="followIntervalTime">Time (s) between follow:</label>
+            <input type="text" id="followIntervalTime" name="followIntervalTime"
+                   title="The amount of time between each follow."
+                   value="300"/>
+            <input type="button" id="startFollowingBtn" onclick="FindToFollow.startFollowing();"
+                   value="Start Following"/>
+        </div>
+        <div id="followStatus" style="display:none">
+
+            <p>We have followed <span id="currentFollowingNumber">0</span> out of <span
+                    id="totalFollowingNumber">0</span>
+                users.</p>
+
+            <p>Next follow in <span id="nextFollowTime">0</span> seconds.</p>
+
+            <p id="currentFollowStatus"></p>
+
+            <img id="loadingImageForFollowing" src="./images/ajax-loader.gif"/>
+        </div>
 
     </div>
 </div>

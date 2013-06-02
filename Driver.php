@@ -324,11 +324,19 @@ class FTF_Driver
      */
     public function generateHtml()
     {
-        $html = '';
+        $html = '
+            <div class="all-checkbox">
+                <input type="checkbox" id="selectAllCheckbox" onclick="FindToFollow.checkAllClicked(event);">All
+            </div>
+            <div class="follow-btn">
+                <input type="button" id="followBtn" onclick="FindToFollow.launchFollowSettings();" value="Follow Users" />
+            </div>';
         $counter = 1;
+
+
         foreach ($this->filteredUsers as $user)
         {
-            $html = $html . '<table width="500" class="user-table">
+            $html = $html . '<table width="500" class="user-table" id="userRow' . $user->id . '" onclick="FindToFollow.userTableRowClicked(event);">
                 <tr>
                 <td valign="top" class="number-td">
                     ' . $counter . '.
@@ -336,10 +344,13 @@ class FTF_Driver
                 <td valign="middle" class="picture-td">
                     <img src="' . $user->profile_image_url . '" />
                 </td>
-                <td valign="middle">
-                    <a href="http://www.twitter.com/' . $user->screen_name . '" target="_blank">' . $user->name . ' (@' . $user->screen_name . ')</a><br />
+                <td valign="middle" class="description-td">
+                    <a href="http://www.twitter.com/' . $user->screen_name . '" target="_blank">' . $user->name . ' (@<span id="username'.$user->id.'">' . $user->screen_name . '</span>)</a><br />
                     <p>' . $user->description . '</p>
                     Friends/Following : <strong>' . $user->friends_count . '</strong> &nbsp;&nbsp;&nbsp;&nbsp; Followers: <strong>' . $user->followers_count . '</strong>
+                </td>
+                <td class="checkbox-td">
+                    <input type="checkbox" name="checked" id="checked" value="' . $user->id . '" class="row-checkbox" />
                 </td>
                 </tr>
                 </table>';

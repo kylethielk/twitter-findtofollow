@@ -1,5 +1,9 @@
 var FindToFollow = new function()
 {
+    this.followIntervalTime = 0;
+    this.interval = null;
+    this.idsToFollow = [];
+    this.ticks = 0;
     /**
      * Minimize the blog container so that only "Show Log" link is visible.
      */
@@ -50,16 +54,16 @@ var FindToFollow = new function()
      * Send a request to backend to find us some followers. This is called by teh Filter Followers button
      * on the UI.
      */
-    this.sendRequest = function()
+    this.sendFilterRequest = function()
     {
         $("#results").removeClass("error-message");
 
-        var requestObject = this.buildRequestObject();
+        var requestObject = this.buildFilterRequestObject();
         requestObject.action = "run";
 
         $("#sendRequestBtn").attr("disabled", "disabled");
 
-        if (this.validateRequest(requestObject))
+        if (this.validateFilterRequest(requestObject))
         {
             $("#loadingImage").show();
             this.obscureResults();
@@ -108,10 +112,10 @@ var FindToFollow = new function()
     };
     /**
      * Validates our request to make sure we are sending required data. Marks invalid fields on UI as well.
-     * @param {FindToFollow.JsonRequest} requestObject The object to send to backend.
+     * @param {FindToFollow.FilterJsonRequest} requestObject The object to send to backend.
      * @returns {boolean} True if valid, false otherwise.
      */
-    this.validateRequest = function(requestObject)
+    this.validateFilterRequest = function(requestObject)
     {
 
         var hasError = false;
@@ -157,12 +161,12 @@ var FindToFollow = new function()
         return !hasError;
     };
     /**
-     * Dynamically builds request object to send to backend. HTML elements must have id's that match each property of FindToFollow.JsonRequest.
-     * @returns {FindToFollow.JsonRequest} .
+     * Dynamically builds request object to send to backend. HTML elements must have id's that match each property of FindToFollow.FilterJsonRequest.
+     * @returns {FindToFollow.FilterJsonRequest} .
      */
-    this.buildRequestObject = function()
+    this.buildFilterRequestObject = function()
     {
-        var jsonRequest = new FindToFollow.JsonRequest();
+        var jsonRequest = new FindToFollow.FilterJsonRequest();
 
         for (var i in jsonRequest)
         {
@@ -172,12 +176,170 @@ var FindToFollow = new function()
         return jsonRequest;
 
     };
+    /**
+     * Select or deselect all rows.
+     * @param {MouseEvent} event Triggered by the click.
+     */
+    this.checkAllClicked = function(event)
+    {
+        var checkBox = $(event.currentTarget);
+
+        var checkedValue = true;
+        if (!checkBox.is(':checked'))
+        {
+            checkedValue = false;
+        }
+
+        var _this = this;
+        $(".row-checkbox").each(function()
+        {
+            _this.setRowSelectedState($(this).val(), $(this), checkedValue);
+        });
+    };
+    /**
+     * Handles a user table row being clicked.
+     * @param {MouseEvent} event Triggered by the click.
+     */
+    this.userTableRowClicked = function(event)
+    {
+        var table = $(event.currentTarget);
+        var srcElement = $(event.srcElement);
+        var checkBox = table.find("#checked");
+
+        var currentlyChecked = srcElement.is(":checkbox") ? !checkBox.is(":checked") : checkBox.is(":checked");
+        var id = checkBox.val();
+
+        this.setRowSelectedState(id, checkBox, !currentlyChecked);
+    };
+    /**
+     *
+     * @param {number} id Row id.
+     * @param {jQuery} checkBox jQuery object for the row's checkbox.
+     * @param {boolean} selected True if row should be selected.
+     */
+    this.setRowSelectedState = function(id, checkBox, selected)
+    {
+        if (!selected)
+        {
+            $("#userRow" + id).removeClass("user-table-selected");
+            checkBox.prop("checked", false);
+        } else
+        {
+            $("#userRow" + id).addClass("user-table-selected");
+            checkBox.prop("checked", true);
+        }
+    };
+    this.launchFollowSettings = function()
+    {
+        $("#dialogBackground").show();
+    };
+    this.startFollowing = function()
+    {
+        var checkedIds = $('input.row-checkbox:checked').map(function()
+        {
+            return this.value
+        }).get();
+
+        var followIntervalTime = $("#followIntervalTime").val();
+        if (!$.isNumeric(followIntervalTime))
+        {
+            $("#followIntervalTime").addClass("input-error");
+            return;
+        }
+        else
+        {
+            $("#followIntervalTime").removeClass("input-error");
+        }
+
+        //Convert seconds to ms.
+        this.followIntervalTime = followIntervalTime * 1000;
+        this.idsToFollow = checkedIds;
+
+        $("#startFollowingBtn").attr('disabled', 'disabled');
+        $("#totalFollowingNumber").html(checkedIds.length);
+
+        $("#followStatus").show();
+        $("#loadingImageForFollowing").show();
+
+        this.followNextUser();
+
+    };
+    this.startInterval = function()
+    {
+        if (this.followIntervalTime < 1000)
+        {
+            return;
+        }
+
+        this.ticks = 0;
+
+        var _this = this;
+        this.interval = setInterval(function()
+        {
+            _this.ticks++;
+            $("#nextFollowTime").html((_this.followIntervalTime - (_this.ticks * 1000)) / 1000);
+            if ((_this.ticks * 1000) >= _this.followIntervalTime)
+            {
+                //Run follower
+                clearInterval(_this.interval);
+                _this.followNextUser();
+            }
+        }, 1000);
+    };
+    this.followNextUser = function()
+    {
+        var nextId = this.idsToFollow.shift();
+        var username = $("#username" + nextId).html();
+
+        $("#currentFollowStatus").html("Attempting to follow " + username + ".");
+        $("#nextFollowTime").html(this.followIntervalTime / 1000);
+
+        var _this = this;
+
+        var requestObject = new FindToFollow.FollowJsonRequest();
+        requestObject.twitterUserId = nextId;
+        requestObject.action = "follow";
+
+        $.post("FindToFollow.php", requestObject)
+            .done(function(response)
+            {
+                response = JSON.parse(response);
+
+                if (response.hasError)
+                {
+                    $("#currentFollowStatus").html("Error from twitter while trying to follow " + username + ". Stopping all follows.");
+                }
+                else
+                {
+                    $("#currentFollowingNumber").html(parseInt($("#currentFollowingNumber").html()) + 1);
+                    if (_this.idsToFollow.length > 0)
+                    {
+                        var nextId = _this.idsToFollow[0];
+                        username = $("#username" + nextId).html();
+
+                        $("#currentFollowStatus").html("Next user to follow is " + username + ".");
+                        _this.startInterval();
+                    }
+                    else
+                    {
+                        $("#currentFollowStatus").html("Done following all users.");
+                        $("#loadingImageForFollowing").hide();
+                    }
+                }
+            })
+            .fail(function()
+            {
+                $("#results").addClass("error-message");
+                $("#results").html("An unexpected error occurred during the request.");
+            })
+
+    };
 };
 /**
  * Structure for requests sent to backend.
  * @constructor
  */
-FindToFollow.JsonRequest = function()
+FindToFollow.FilterJsonRequest = function()
 {
     this.twitterUsername = "";
     this.sourceUsername = "";
@@ -188,4 +350,8 @@ FindToFollow.JsonRequest = function()
     this.maximumFriends = -1;
     this.friendToFollowerRatio = "";
     this.keywords = "";
+};
+FindToFollow.FollowJsonRequest = function()
+{
+    this.twitterUserId = "";
 };

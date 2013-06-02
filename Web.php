@@ -34,6 +34,7 @@ require_once('Driver.php');
 class FTF_Web
 {
     const ACTION_RUN = 'run';
+    const ACTION_FOLLOW = 'follow';
     /**
      * @var FTF_Driver
      */
@@ -55,6 +56,16 @@ class FTF_Web
         {
             FTF_Web::filterFollowers($data);
         }
+        else if ($action == FTF_Web::ACTION_FOLLOW)
+        {
+            FTF_Web::followUser($data);
+        }
+    }
+
+    private static function followUser($data)
+    {
+        sleep(2);
+        FTF_Web::writeValidResponse(print_r($data, true), "");
     }
 
     /**

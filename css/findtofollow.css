@@ -34,6 +34,7 @@ div {
     margin: 2px;
 }
 
+#dialogContent input,
 #leftColumn input,
 #leftColumn select {
     margin: 10px 0 0 12px;
@@ -129,26 +130,90 @@ input {
     margin: 5px;
 }
 
+.user-table-selected {
+    background-color: #b5ffaa;
+    border-color: rgb(35, 183, 189) !important;
+}
+
 .user-table {
     border-width: 0 0 1px 0;
     border-color: #CCC;
     border-style: solid;
 }
-.user-table .picture-td
-{
+
+.user-table .picture-td {
     width: 50px;
 }
-.user-table .number-td
-{
+
+.user-table .number-td {
     width: 20px;
 }
+
+.user-table .description-td {
+    width: 375px;
+}
+
 .user-table td {
     padding: 4px;
 }
+
 .user-table img {
     border-radius: 6px;
 }
+
 #loadingImage {
     float: right;
-    margin:-24px 0 7px 0;
+    margin: -24px 0 7px 0;
+}
+
+.all-checkbox {
+    height: 25px;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.follow-btn {
+    height: 35px;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+#dialogBackground {
+    background: rgba(0, 0, 0, 0.7);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    margin: -8px;
+}
+
+#dialogContent {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 1px 1px 6px rgba(154, 154, 154, 0.6);
+    border: 1px solid #ccc;
+    width: 482px;
+    height: 300px;
+    top: 10%;
+    left: 50%;
+    margin-left: -241px;
+    position: fixed;
+    padding: 15px;
+}
+
+#results {
+    position: relative;
+    padding-top: 45px;
+}
+
+#followSettings {
+    margin: 10px 0;
+}
+
+#followStatus {
+    border-top: 1px solid #ccc;
+    margin-top: 25px;
 }
