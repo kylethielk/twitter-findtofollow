@@ -4,6 +4,16 @@
 var FindToFollow = new function()
 {
     /**
+     * The minimum time between follows.
+     * @type {number}
+     */
+    this.followIntervalTimeMinimum = -1;
+    /**
+     * The maximum time between follows.
+     * @type {number}
+     */
+    this.followIntervalTimeMaximum = -1;
+    /**
      * The amount of time in ms between each follow.
      * @type {number}
      */
@@ -327,20 +337,42 @@ var FindToFollow = new function()
      */
     this.startStaggeredFollowing = function()
     {
+        this.followIntervalTimeMinimum = parseInt($("#followIntervalTimeMinimum").val());
+        this.followIntervalTimeMaximum = parseInt($("#followIntervalTimeMaximum").val());
 
-        var followIntervalTime = $("#followIntervalTime").val();
-        if (!$.isNumeric(followIntervalTime))
+        if (!$.isNumeric(this.followIntervalTimeMinimum))
         {
-            $("#followIntervalTime").addClass("input-error");
+            $("#followIntervalTimeMinimum").addClass("input-error");
             return;
         }
         else
         {
-            $("#followIntervalTime").removeClass("input-error");
+            $("#followIntervalTimeMinimum").removeClass("input-error");
+        }
+        if (!$.isNumeric(this.followIntervalTimeMaximum))
+        {
+            $("#followIntervalTimeMaximum").addClass("input-error");
+            return;
+        }
+        else
+        {
+            $("#followIntervalTimeMaximum").removeClass("input-error");
+        }
+
+        if (this.followIntervalTimeMaximum < this.followIntervalTimeMinimum)
+        {
+            $("#followIntervalTimeMinimum").addClass("input-error");
+            $("#followIntervalTimeMaximum").addClass("input-error");
+            return;
+        }
+        else
+        {
+            $("#followIntervalTimeMinimum").removeClass("input-error");
+            $("#followIntervalTimeMaximum").removeClass("input-error");
         }
 
         //Convert seconds to ms.
-        this.followIntervalTime = followIntervalTime * 1000;
+        this.followIntervalTime = this.generateIntervalTime();
 
         $("#startFollowingBtn").attr("disabled", "disabled");
         $("#loadingImageForFollowing").show();
@@ -350,15 +382,22 @@ var FindToFollow = new function()
 
     };
     /**
+     * Generates a random interval time between (followIntervalTimeMinimum and followIntervalTimeMaximum) * 1000 to get ms.
+     * @returns {number} The result in ms.
+     */
+    this.generateIntervalTime = function()
+    {
+        var random = Math.floor(Math.random() * (this.followIntervalTimeMaximum - this.followIntervalTimeMinimum + 1)) + this.followIntervalTimeMinimum;
+        return random * 1000;
+    };
+    /**
      * Called for each user that is to be followed. Starts countdown, at the end of which it will call
      * followNextUser.  Relies on followIntervalTime being set and assumes there is another user to follow.
      */
     this.startFollowInterval = function()
     {
-        if (this.followIntervalTime < 1000)
-        {
-            return;
-        }
+        this.followIntervalTime = this.generateIntervalTime();
+        $("#nextFollowTime").html(this.followIntervalTime / 1000);
 
         this.followTicks = 0;
 
@@ -385,7 +424,7 @@ var FindToFollow = new function()
         var username = $("#username" + nextId).html();
 
         $("#currentFollowStatus").html("Attempting to follow " + username + ".");
-        $("#nextFollowTime").html(this.followIntervalTime / 1000);
+
 
         var _this = this;
 
@@ -411,8 +450,9 @@ var FindToFollow = new function()
                     $("#userRow" + nextId).fadeOut(1000, function()
                     {
                         $(this).remove();
+                        _this.updateSelectedCount();
                     });
-                    _this.updateSelectedCount();
+
 
                     if (_this.idsToFollow.length > 0)
                     {

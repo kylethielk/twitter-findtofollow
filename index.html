@@ -113,9 +113,17 @@
             the amount of time in between each follow. This allows for automatic, staggered following of each
             person. We don't want to blast follow a bunch of people and trigger twitter's alarms. Try starting with
             300-600 seconds.</p>
+
+        <h2>UnFollow People</h2>
+
+        <p>Unfollowing is coming soon. For now the recommended method is: <a href="http://manageflitter.com"
+                                                                             target="_blank">manageflitter.com</a></p>
+
         <p>
-            For more information visit this project on github: <a href="https://github.com/kylethielk/twitter-findtofollow/" target="_blank">Twitter FindToFollow</a>.
+            For more information visit this project on github: <a
+                href="https://github.com/kylethielk/twitter-findtofollow/" target="_blank">Twitter FindToFollow</a>.
         </p>
+
         <p>
             Kyle Thielk
             can be contacted at his website: <a href="http://www.kylethielk.com" target="_blank">kylethielk.com</a>.
@@ -132,13 +140,17 @@
         <h1>Follow Interval Settings</h1>
 
         <p>Rather than following all in one blast, we will spread out the follows to hopefully avoid Twitter's Spam
-            filters. Set the time between each follow below.</p>
+            filters. Using a range and randomly choosing a value in between for each time also helps.</p>
 
         <div id="followSettings">
-            <label for="followIntervalTime">Time (s) between follow:</label>
-            <input type="text" id="followIntervalTime" name="followIntervalTime"
+            <label for="followIntervalTimeMinimum">Min Time (s):</label>
+            <input type="text" id="followIntervalTimeMinimum" name="followIntervalTimeMinimum"
                    title="The amount of time between each follow."
                    value="300"/>
+            <label for="followIntervalTimeMaximum">Max Time (s):</label>
+            <input type="text" id="followIntervalTimeMaximum" name="followIntervalTimeMaximum"
+                   title="The amount of time between each follow."
+                   value="600"/>
             <input type="button" id="startFollowingBtn" onclick="FindToFollow.startStaggeredFollowing();"
                    value="Start Following" class="blue-button"/>
         </div>

@@ -18,14 +18,17 @@ h2 {
     color: rgb(56, 56, 56);
 
 }
+
 a {
     color: #104c97;
     text-decoration: none;
 }
+
 a:hover {
     text-decoration: underline;
     color: #116CCC;
 }
+
 div {
     margin: 8px;
 }
@@ -43,6 +46,7 @@ div {
     z-index: 2;
     min-height: 250px;
 }
+
 .full-column {
     width: 882px;
     border: 1px solid #ccc;
@@ -52,6 +56,7 @@ div {
     background-color: #fff;
     padding: 15px;
 }
+
 #leftColumn {
     width: 275px;
     float: left;
@@ -68,7 +73,11 @@ div {
     border-top-left-radius: 5px;
 }
 
-#dialogContent input,
+#dialogContent input[type="text"] {
+    margin: 10px 13px 0 5px;
+    width: 45px;
+}
+
 #leftColumn input,
 #leftColumn select {
     margin: 10px 0 0 12px;
@@ -88,6 +97,7 @@ div {
 #leftColumn #sendRequestBtn {
     margin: 5px 0 10px 50px;
 }
+
 #rightColumn {
     width: 635px;
     float: left;
@@ -331,6 +341,7 @@ input {
     position: relative;
     top: 1px;
 }
+
 .error-message {
     color: red;
 }
