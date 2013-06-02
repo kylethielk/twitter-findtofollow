@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-require_once('WebRequest.php');
+require_once('FilterRequest.php');
 require_once('WebResponse.php');
 require_once('Driver.php');
 
@@ -76,7 +76,7 @@ class FTF_Web
     {
         global $apiKeys;
 
-        $settings = new FTF_WebRequest($data);
+        $settings = new FTF_FilterRequest($data);
 
         if (!isset($settings) || !$settings->validate())
         {

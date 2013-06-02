@@ -28,7 +28,7 @@
  * The object form of the json we will receive from the front-end.
  * Class FTF_WebRequest
  */
-class FTF_WebRequest
+class FTF_FilterRequest
 {
     const FRIENDS_GREATER_THAN_FOLLOWERS = 'friendsGreaterThanFollowers';
     const FOLLOWERS_GREATER_THAN_FRIENDS = 'followersGreaterThanFriends';
@@ -87,7 +87,7 @@ class FTF_WebRequest
      * Construct from json object received from front-end.
      * @param $ajaxData Object.
      */
-    public function FTF_WebRequest($ajaxData)
+    public function FTF_FilterRequest($ajaxData)
     {
         foreach ($this as $key => $value)
         {

@@ -44,7 +44,7 @@ class FTF_Driver
      */
     private $apiKeys;
     /**
-     * @var FTF_WebRequest
+     * @var FTF_FilterRequest
      */
     private $webRequest;
     /**
@@ -70,7 +70,7 @@ class FTF_Driver
 
     /**
      * @param $apiKeys array .
-     * @param $webRequest FTF_WebRequest .
+     * @param $webRequest FTF_FilterRequest .
      */
     public function FTF_Driver($apiKeys, $webRequest)
     {
@@ -399,11 +399,11 @@ class FTF_Driver
             {
                 $addUser = false;
             }
-            if ($addUser && $this->webRequest->friendToFollowerRatio == FTF_WebRequest::FOLLOWERS_GREATER_THAN_FRIENDS && $user->followers_count < $user->friends_count)
+            if ($addUser && $this->webRequest->friendToFollowerRatio == FTF_FilterRequest::FOLLOWERS_GREATER_THAN_FRIENDS && $user->followers_count < $user->friends_count)
             {
                 $addUser = false;
             }
-            if ($addUser && $this->webRequest->friendToFollowerRatio == FTF_WebRequest::FRIENDS_GREATER_THAN_FOLLOWERS && $user->followers_count > $user->friends_count)
+            if ($addUser && $this->webRequest->friendToFollowerRatio == FTF_FilterRequest::FRIENDS_GREATER_THAN_FOLLOWERS && $user->followers_count > $user->friends_count)
             {
                 $addUser = false;
             }
