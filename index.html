@@ -103,7 +103,7 @@
             <input type="button" id="startFollowingBtn" onclick="FindToFollow.startFollowing();"
                    value="Start Following"/>
         </div>
-        <div id="followStatus" style="display:none">
+        <div id="followStatus">
 
             <p>We have followed <span id="currentFollowingNumber">0</span> out of <span
                     id="totalFollowingNumber">0</span>
@@ -113,7 +113,10 @@
 
             <p id="currentFollowStatus"></p>
 
-            <img id="loadingImageForFollowing" src="./images/ajax-loader.gif"/>
+            <img id="loadingImageForFollowing" src="./images/ajax-loader.gif" style="display:none"/>
+
+            <input type="button" id="closePopupBtn" style="display:none" value="Close Window"
+                   onclick="FindToFollow.closeFollowPopup();"/>
         </div>
 
     </div>

@@ -24,8 +24,10 @@
  */
 
 require_once('FilterRequest.php');
+require_once('FollowRequest.php');
 require_once('WebResponse.php');
 require_once('Filter.php');
+require_once('Follow.php');
 
 /**
  * Executes AJAX requests from html file.
@@ -42,7 +44,7 @@ class FTF_Web
 
     /**
      * Execute the ajax request.
-     * @param $data $_POST data.
+     * @param Array $data $_POST data.
      */
     public static function executeRequest($data)
     {
@@ -62,9 +64,14 @@ class FTF_Web
         }
     }
 
+    /**
+     * Executes the web request to follow an user.
+     * @param Array $data $_POST data.
+     */
     private static function followUser($data)
     {
-        sleep(2);
+        global $apiKeys;
+
         $request = new FTF_FollowRequest($data);
 
         if (!isset($request) || !$request->validate())
@@ -72,12 +79,16 @@ class FTF_Web
             FTF_Web::writeErrorResponse('Follow Request invalid or not supplied.' . print_r($request, true));
         }
 
-        FTF_Web::writeValidResponse(print_r($data, true), "");
+
+        $follow = new FTF_Follow($apiKeys, $request);
+        FTF_Web::$currentDriver = $follow;
+
+        $follow->followUser();
     }
 
     /**
      * Start the process and find filtered users to follow.
-     * @param $data $_POST data.
+     * @param Array $data $_POST data.
      */
     private static function filterFollowers($data)
     {
@@ -109,7 +120,7 @@ class FTF_Web
      * @param $html String The html to write.
      * @param $log String a string for the log.
      */
-    private static function writeValidResponse($html, $log)
+    public static function writeValidResponse($html, $log)
     {
         $response = new FTF_WebResponse();
         $response->hasError = false;
@@ -139,6 +150,14 @@ class FTF_Web
 
     }
 
+    /**
+     * Our custom PHP error handler.
+     * @param $errno
+     * @param $errstr
+     * @param $errfile
+     * @param $errline
+     * @return bool
+     */
     public static function errorHandler($errno, $errstr, $errfile, $errline)
     {
         if (!(error_reporting() & $errno))

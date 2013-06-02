@@ -31,10 +31,15 @@ class FTF_FollowRequest
 {
 
     /**
+     * @var String Username of person we are running application for.
+     */
+    public $twitterUsername;
+
+    /**
      * Userid for person we want to follow.
      * @var number
      */
-    public $twitterUserId;
+    public $toFollowUserId;
 
     /**
      * Construct from json object received from front-end.
@@ -60,7 +65,7 @@ class FTF_FollowRequest
     public function validate()
     {
         //Required fields
-        if (!isset($this->twitterUserId) || !is_int($this->twitterUserId))
+        if (!isset($this->toFollowUserId) || !is_numeric($this->toFollowUserId) || $this->toFollowUserId < 0 || !isset($this->twitterUsername))
         {
             return false;
         }

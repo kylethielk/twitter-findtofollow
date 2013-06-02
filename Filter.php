@@ -21,8 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-require_once('UserData.php');
-
+require_once('TwitterDriver.php');
 /**
  * Controls the flow of the application. General execution:
  *
@@ -32,21 +31,13 @@ require_once('UserData.php');
  *
  * Class FTF_Filter
  */
-class FTF_Filter
+class FTF_Filter extends FTF_TwitterDriver
 {
 
     /**
-     * @var FTF_UserData
-     */
-    private $userData;
-    /**
-     * @var array Array of Twitter OAuth Keys.
-     */
-    private $apiKeys;
-    /**
      * @var FTF_FilterRequest
      */
-    private $webRequest;
+    private $filterRequest;
     /**
      * @var Array Ids of potential friends.
      */
@@ -59,27 +50,20 @@ class FTF_Filter
      * @var Array of users that matched our filter criteria. These are the final resuts.
      */
     public $filteredUsers;
-    /**
-     * @var TwitterAPIExchange
-     */
-    private $twitterApi;
-    /**
-     * @var array Log Messages.
-     */
-    private $logArray = array();
 
     /**
      * @param $apiKeys array .
-     * @param $webRequest FTF_FilterRequest .
+     * @param $filterRequest FTF_FilterRequest .
      */
-    public function FTF_Filter($apiKeys, $webRequest)
+    public function __construct($apiKeys, $filterRequest)
     {
-        $this->apiKeys = $apiKeys;
-        $this->webRequest = $webRequest;
+        parent::__construct($apiKeys, $filterRequest->twitterUsername);
+
+        $this->filterRequest = $filterRequest;
         $this->timer = new timer;
         $this->timer->set_output(2);
 
-        $this->userData = new FTF_UserData($this->webRequest->twitterUsername);
+
     }
 
     /**
@@ -91,13 +75,13 @@ class FTF_Filter
         $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
 
         $url = 'https://api.twitter.com/1.1/friends/ids.json';
-        $getfield = '?cursor=-1&screen_name=' . $this->webRequest->twitterUsername . '&count=5000';
+        $getField = '?cursor=-1&screen_name=' . $this->filterRequest->twitterUsername . '&count=5000';
         $requestMethod = 'GET';
 
         $this->timer->add_cp('Start: Building Friend Ids ');
 
         $response = $this->twitterApi
-            ->setGetfield($getfield)
+            ->setGetfield($getField)
             ->buildOauth($url, $requestMethod)
             ->performRequest();
 
@@ -127,15 +111,15 @@ class FTF_Filter
      */
     public function buildFollowerIds()
     {
-        if (!isset($this->webRequest->followerLimit) || $this->webRequest->followerLimit > 5000)
+        if (!isset($this->filterRequest->followerLimit) || $this->filterRequest->followerLimit > 5000)
         {
-            $this->webRequest->followerLimit = 5000;
+            $this->filterRequest->followerLimit = 5000;
         }
 
         $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
 
         $url = 'https://api.twitter.com/1.1/followers/ids.json';
-        $getField = '?cursor=-1&screen_name=' . $this->webRequest->sourceUsername . '&count=' . $this->webRequest->followerLimit;
+        $getField = '?cursor=-1&screen_name=' . $this->filterRequest->sourceUsername . '&count=' . $this->filterRequest->followerLimit;
         $requestMethod = 'GET';
 
         $this->timer->add_cp('Start: Building Follower Ids ');
@@ -274,7 +258,7 @@ class FTF_Filter
         $limit = 100;
 
 
-        while ((($offset + $limit) <= $this->webRequest->followerLimit || $offset == 0) && ($offset) <= count($this->potentialFriendIds))
+        while ((($offset + $limit) <= $this->filterRequest->followerLimit || $offset == 0) && ($offset) <= count($this->potentialFriendIds))
         {
             //Get subset of user ids to fetch full profiles for, twitter limits this call to 100 per call.
             $ids = array_slice($this->potentialFriendIds, $offset, $limit);
@@ -293,9 +277,9 @@ class FTF_Filter
 
             //Update offset and possibly limit for next go around in loop
             $offset = $offset + $limit;
-            if (($offset + $limit) > $this->webRequest->followerLimit)
+            if (($offset + $limit) > $this->filterRequest->followerLimit)
             {
-                $limit = max($this->webRequest->followerLimit - $offset, 1);
+                $limit = max($this->filterRequest->followerLimit - $offset, 1);
             }
 
         }
@@ -304,18 +288,15 @@ class FTF_Filter
     }
 
     /**
-     * Generates a string of all log entries.
-     * @return string Log String.
+     * Generates log message.
+     * @return string Log Message.
      */
     public function generateLog()
     {
-        $message = '';
-        foreach ($this->logArray as $log)
-        {
-            $message .= $log;
-        }
+        $message = parent::generateLog();
         $message .= $this->generateTimerStats();
         return $message;
+
     }
 
     /**
@@ -329,7 +310,7 @@ class FTF_Filter
                 <input type="checkbox" id="selectAllCheckbox" onclick="FindToFollow.checkAllClicked(event);">All
             </div>
             <div class="follow-btn">
-                <input type="button" id="followBtn" onclick="FindToFollow.launchFollowSettings();" value="Follow Users" />
+                <input type="button" id="followBtn" onclick="FindToFollow.openFollowPopup();" value="Follow Users" />
             </div>';
         $counter = 1;
 
@@ -345,7 +326,7 @@ class FTF_Filter
                     <img src="' . $user->profile_image_url . '" />
                 </td>
                 <td valign="middle" class="description-td">
-                    <a href="http://www.twitter.com/' . $user->screen_name . '" target="_blank">' . $user->name . ' (@<span id="username'.$user->id.'">' . $user->screen_name . '</span>)</a><br />
+                    <a href="http://www.twitter.com/' . $user->screen_name . '" target="_blank">' . $user->name . ' (@<span id="username' . $user->id . '">' . $user->screen_name . '</span>)</a><br />
                     <p>' . $user->description . '</p>
                     Friends/Following : <strong>' . $user->friends_count . '</strong> &nbsp;&nbsp;&nbsp;&nbsp; Followers: <strong>' . $user->followers_count . '</strong>
                 </td>
@@ -371,7 +352,7 @@ class FTF_Filter
      */
     private function filterUsers($users)
     {
-        $keywordArray = explode(',', $this->webRequest->keywords);
+        $keywordArray = explode(',', $this->filterRequest->keywords);
         if ($keywordArray && count($keywordArray) == 1 && empty($keywordArray[0]))
         {
             $keywordArray = null;
@@ -383,27 +364,27 @@ class FTF_Filter
             //$filteredUsers[] = $user;
             $addUser = true;
 
-            if (!empty($this->webRequest->minimumFriends) && $user->friends_count < $this->webRequest->minimumFriends)
+            if (!empty($this->filterRequest->minimumFriends) && $user->friends_count < $this->filterRequest->minimumFriends)
             {
                 $addUser = false;
             }
-            if ($addUser && !empty($this->webRequest->maximumFriends) && $user->friends_count > $this->webRequest->maximumFriends)
+            if ($addUser && !empty($this->filterRequest->maximumFriends) && $user->friends_count > $this->filterRequest->maximumFriends)
             {
                 $addUser = false;
             }
-            if (!empty($this->webRequest->minimumFollowers) && $user->followers_count < $this->webRequest->minimumFollowers)
+            if (!empty($this->filterRequest->minimumFollowers) && $user->followers_count < $this->filterRequest->minimumFollowers)
             {
                 $addUser = false;
             }
-            if ($addUser && !empty($this->webRequest->maximumFollowers) && $user->followers_count > $this->webRequest->maximumFollowers)
+            if ($addUser && !empty($this->filterRequest->maximumFollowers) && $user->followers_count > $this->filterRequest->maximumFollowers)
             {
                 $addUser = false;
             }
-            if ($addUser && $this->webRequest->friendToFollowerRatio == FTF_FilterRequest::FOLLOWERS_GREATER_THAN_FRIENDS && $user->followers_count < $user->friends_count)
+            if ($addUser && $this->filterRequest->friendToFollowerRatio == FTF_FilterRequest::FOLLOWERS_GREATER_THAN_FRIENDS && $user->followers_count < $user->friends_count)
             {
                 $addUser = false;
             }
-            if ($addUser && $this->webRequest->friendToFollowerRatio == FTF_FilterRequest::FRIENDS_GREATER_THAN_FOLLOWERS && $user->followers_count > $user->friends_count)
+            if ($addUser && $this->filterRequest->friendToFollowerRatio == FTF_FilterRequest::FRIENDS_GREATER_THAN_FOLLOWERS && $user->followers_count > $user->friends_count)
             {
                 $addUser = false;
             }
@@ -455,36 +436,7 @@ class FTF_Filter
 
     }
 
-    /**
-     * Checks response for errors and returns string if has error. false otherwise.
-     * @param $response Object The response object received from Twitter that contains errors.
-     * @return String the error messages.
-     */
-    public function checkForTwitterErrors($response)
-    {
-        if ($response && isset($response->errors))
-        {
-            $errors = $response->errors;
-            $message = '';
-            foreach ($errors as $error)
-            {
-                $message = $message . $error->message . '<br />';
-            }
-            return $message;
-        }
 
-        return false;
-
-    }
-
-    /**
-     * Add a message to the log.
-     * @param $message String The message to add to the log.
-     */
-    public function addLogMessage($message)
-    {
-        $this->logArray[] = $message . '<br />';
-    }
 }
 
 ?>

@@ -185,7 +185,7 @@ var FindToFollow = new function()
         var checkBox = $(event.currentTarget);
 
         var checkedValue = true;
-        if (!checkBox.is(':checked'))
+        if (!checkBox.is(":checked"))
         {
             checkedValue = false;
         }
@@ -229,16 +229,30 @@ var FindToFollow = new function()
             checkBox.prop("checked", true);
         }
     };
-    this.launchFollowSettings = function()
+
+    this.openFollowPopup = function()
     {
         $("#dialogBackground").show();
-    };
-    this.startFollowing = function()
-    {
-        var checkedIds = $('input.row-checkbox:checked').map(function()
+        $("#startFollowingBtn").removeAttr("disabled");
+        $("#loadingImageForFollowing").hide();
+        $("#currentFollowStatus").html("");
+        $("#nextFollowTime").html("N/A");
+        $("#closePopupBtn").hide();
+
+        this.idsToFollow = $("input.row-checkbox:checked").map(function()
         {
             return this.value
         }).get();
+
+        $("#currentFollowingNumber").html(0);
+        $("#totalFollowingNumber").html(this.idsToFollow.length);
+    };
+    this.closeFollowPopup = function()
+    {
+        $("#dialogBackground").hide();
+    };
+    this.startFollowing = function()
+    {
 
         var followIntervalTime = $("#followIntervalTime").val();
         if (!$.isNumeric(followIntervalTime))
@@ -253,12 +267,8 @@ var FindToFollow = new function()
 
         //Convert seconds to ms.
         this.followIntervalTime = followIntervalTime * 1000;
-        this.idsToFollow = checkedIds;
 
-        $("#startFollowingBtn").attr('disabled', 'disabled');
-        $("#totalFollowingNumber").html(checkedIds.length);
-
-        $("#followStatus").show();
+        $("#startFollowingBtn").attr("disabled", "disabled");
         $("#loadingImageForFollowing").show();
 
         this.followNextUser();
@@ -297,7 +307,8 @@ var FindToFollow = new function()
         var _this = this;
 
         var requestObject = new FindToFollow.FollowJsonRequest();
-        requestObject.twitterUserId = nextId;
+        requestObject.toFollowUserId = nextId;
+        requestObject.twitterUsername = $("#twitterUsername").val();
         requestObject.action = "follow";
 
         $.post("FindToFollow.php", requestObject)
@@ -307,14 +318,21 @@ var FindToFollow = new function()
 
                 if (response.hasError)
                 {
-                    $("#currentFollowStatus").html("Error from twitter while trying to follow " + username + ". Stopping all follows.");
+                    $("#currentFollowStatus").html("Error from " + username + ". Stopping all follows. [" + response.errorMessage + "]");
                 }
                 else
                 {
                     $("#currentFollowingNumber").html(parseInt($("#currentFollowingNumber").html()) + 1);
+
+                    //Lets remove table
+                    $("#userRow" + nextId).fadeOut(1000, function()
+                    {
+                        $(this).remove();
+                    });
+
                     if (_this.idsToFollow.length > 0)
                     {
-                        var nextId = _this.idsToFollow[0];
+                        nextId = _this.idsToFollow[0];
                         username = $("#username" + nextId).html();
 
                         $("#currentFollowStatus").html("Next user to follow is " + username + ".");
@@ -323,6 +341,7 @@ var FindToFollow = new function()
                     else
                     {
                         $("#currentFollowStatus").html("Done following all users.");
+                        $("#closePopupBtn").show();
                         $("#loadingImageForFollowing").hide();
                     }
                 }
@@ -331,7 +350,7 @@ var FindToFollow = new function()
             {
                 $("#results").addClass("error-message");
                 $("#results").html("An unexpected error occurred during the request.");
-            })
+            });
 
     };
 };
@@ -353,5 +372,6 @@ FindToFollow.FilterJsonRequest = function()
 };
 FindToFollow.FollowJsonRequest = function()
 {
-    this.twitterUserId = "";
+    this.toFollowUserId = -1;
+    this.twitterUsername = "";
 };
