@@ -310,8 +310,9 @@ class FTF_Filter extends FTF_TwitterDriver
                 <input type="checkbox" id="selectAllCheckbox" onclick="FindToFollow.checkAllClicked(event);">All
             </div>
             <div class="follow-btn">
-                <input type="button" id="followBtn" onclick="FindToFollow.openFollowPopup();" value="Follow Users" />
-            </div>';
+                <div id="followBtn" onclick="FindToFollow.openFollowPopup();" class="blue-button">Start Following (<span id="selectedCount">0</span>)</div>
+            </div>
+            <br />';
         $counter = 1;
 
 

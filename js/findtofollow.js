@@ -4,6 +4,22 @@ var FindToFollow = new function()
     this.interval = null;
     this.idsToFollow = [];
     this.ticks = 0;
+    this.changePage = function(page)
+    {
+        $(".page").each(function()
+        {
+            if ($(this).attr('id') == page)
+            {
+                $("#" + page + "Tab").addClass("tab-selected");
+                $(this).show();
+            }
+            else
+            {
+                $("#" + $(this).attr('id') + "Tab").removeClass("tab-selected");
+                $(this).hide();
+            }
+        })
+    };
     /**
      * Minimize the blog container so that only "Show Log" link is visible.
      */
@@ -195,6 +211,19 @@ var FindToFollow = new function()
         {
             _this.setRowSelectedState($(this).val(), $(this), checkedValue);
         });
+        this.updateSelectedCount();
+
+    };
+    /**
+     * Counts the number of selected rows, and updates the Follow Users button with result.
+     */
+    this.updateSelectedCount = function()
+    {
+        var checkedCount = $("input.row-checkbox:checked").map(function()
+        {
+            return this.value
+        }).get().length;
+        $("#selectedCount").html(checkedCount);
     };
     /**
      * Handles a user table row being clicked.
@@ -210,6 +239,7 @@ var FindToFollow = new function()
         var id = checkBox.val();
 
         this.setRowSelectedState(id, checkBox, !currentlyChecked);
+        this.updateSelectedCount()
     };
     /**
      *
@@ -232,6 +262,18 @@ var FindToFollow = new function()
 
     this.openFollowPopup = function()
     {
+        this.idsToFollow = $("input.row-checkbox:checked").map(function()
+        {
+            return this.value
+        }).get();
+
+        //Make sure we have atleast one item selected
+        if (this.idsToFollow.length < 1)
+        {
+            alert("You must select at least one person to follow.");
+            return;
+        }
+
         $("#dialogBackground").show();
         $("#startFollowingBtn").removeAttr("disabled");
         $("#loadingImageForFollowing").hide();
@@ -239,10 +281,7 @@ var FindToFollow = new function()
         $("#nextFollowTime").html("N/A");
         $("#closePopupBtn").hide();
 
-        this.idsToFollow = $("input.row-checkbox:checked").map(function()
-        {
-            return this.value
-        }).get();
+
 
         $("#currentFollowingNumber").html(0);
         $("#totalFollowingNumber").html(this.idsToFollow.length);
@@ -329,7 +368,7 @@ var FindToFollow = new function()
                     {
                         $(this).remove();
                     });
-
+                    _this.updateSelectedCount();
                     if (_this.idsToFollow.length > 0)
                     {
                         nextId = _this.idsToFollow[0];
