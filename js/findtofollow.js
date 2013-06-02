@@ -1,9 +1,33 @@
+/**
+ * The main class that all of our javascript functionality sits under.
+ */
 var FindToFollow = new function()
 {
+    /**
+     * The amount of time in ms between each follow.
+     * @type {number}
+     */
     this.followIntervalTime = 0;
-    this.interval = null;
+    /**
+     * The interval # returned from setInterval.
+     * @type {null}
+     */
+    this.followInterval = null;
+    /**
+     * Array of ids to start following.
+     * @type {Array}
+     */
     this.idsToFollow = [];
-    this.ticks = 0;
+    /**
+     * Keeps track of how many ticks of the interval we have had. This allows us to have a countdown timer.
+     * @type {number}
+     */
+    this.followTicks = 0;
+
+    /**
+     * Called each time a tab is clicked.
+     * @param page
+     */
     this.changePage = function(page)
     {
         $(".page").each(function()
@@ -21,7 +45,7 @@ var FindToFollow = new function()
         })
     };
     /**
-     * Minimize the blog container so that only "Show Log" link is visible.
+     * Minimize the log container so that only "Show Log" link is visible.
      */
     this.minimizeLog = function()
     {
@@ -67,7 +91,7 @@ var FindToFollow = new function()
         $("#logContainer").fadeTo(250, 1);
     };
     /**
-     * Send a request to backend to find us some followers. This is called by teh Filter Followers button
+     * Send a request to backend to find us some followers. This is called by the Filter Followers button
      * on the UI.
      */
     this.sendFilterRequest = function()
@@ -193,7 +217,7 @@ var FindToFollow = new function()
 
     };
     /**
-     * Select or deselect all rows.
+     * Select or deselect all rows. Called by All checkbox on UI.
      * @param {MouseEvent} event Triggered by the click.
      */
     this.checkAllClicked = function(event)
@@ -211,6 +235,7 @@ var FindToFollow = new function()
         {
             _this.setRowSelectedState($(this).val(), $(this), checkedValue);
         });
+
         this.updateSelectedCount();
 
     };
@@ -242,7 +267,7 @@ var FindToFollow = new function()
         this.updateSelectedCount()
     };
     /**
-     *
+     * Sets the visible state of a row.
      * @param {number} id Row id.
      * @param {jQuery} checkBox jQuery object for the row's checkbox.
      * @param {boolean} selected True if row should be selected.
@@ -259,7 +284,9 @@ var FindToFollow = new function()
             checkBox.prop("checked", true);
         }
     };
-
+    /**
+     * Called by Follow Users button. Opens the popup that allows us to start staggered following.
+     */
     this.openFollowPopup = function()
     {
         this.idsToFollow = $("input.row-checkbox:checked").map(function()
@@ -274,23 +301,31 @@ var FindToFollow = new function()
             return;
         }
 
+        //Re-initialize items to starting point.
         $("#dialogBackground").show();
         $("#startFollowingBtn").removeAttr("disabled");
         $("#loadingImageForFollowing").hide();
         $("#currentFollowStatus").html("");
+        $("#currentFollowStatus").removeClass("error-message");
         $("#nextFollowTime").html("N/A");
         $("#closePopupBtn").hide();
-
 
 
         $("#currentFollowingNumber").html(0);
         $("#totalFollowingNumber").html(this.idsToFollow.length);
     };
+    /**
+     * Closes the follow popup.
+     */
     this.closeFollowPopup = function()
     {
         $("#dialogBackground").hide();
     };
-    this.startFollowing = function()
+    /**
+     * User triggered after setting follow interval.
+     * @private
+     */
+    this.startStaggeredFollowing = function()
     {
 
         var followIntervalTime = $("#followIntervalTime").val();
@@ -310,31 +345,40 @@ var FindToFollow = new function()
         $("#startFollowingBtn").attr("disabled", "disabled");
         $("#loadingImageForFollowing").show();
 
+        //Start by following first user immediately, rather than waiting for first countdown.
         this.followNextUser();
 
     };
-    this.startInterval = function()
+    /**
+     * Called for each user that is to be followed. Starts countdown, at the end of which it will call
+     * followNextUser.  Relies on followIntervalTime being set and assumes there is another user to follow.
+     */
+    this.startFollowInterval = function()
     {
         if (this.followIntervalTime < 1000)
         {
             return;
         }
 
-        this.ticks = 0;
+        this.followTicks = 0;
 
         var _this = this;
-        this.interval = setInterval(function()
+        this.followInterval = setInterval(function()
         {
-            _this.ticks++;
-            $("#nextFollowTime").html((_this.followIntervalTime - (_this.ticks * 1000)) / 1000);
-            if ((_this.ticks * 1000) >= _this.followIntervalTime)
+            _this.followTicks++;
+            $("#nextFollowTime").html((_this.followIntervalTime - (_this.followTicks * 1000)) / 1000);
+            if ((_this.followTicks * 1000) >= _this.followIntervalTime)
             {
-                //Run follower
-                clearInterval(_this.interval);
+                //Timer has expired, Follow user.
+                clearInterval(_this.followInterval);
                 _this.followNextUser();
             }
         }, 1000);
     };
+    /**
+     * Plucks the first element in the idsToFollow array and sends a follow request to Twitter for this user.
+     * On success assuming there are more users to follow still, this method will start a new interval.
+     */
     this.followNextUser = function()
     {
         var nextId = this.idsToFollow.shift();
@@ -369,16 +413,19 @@ var FindToFollow = new function()
                         $(this).remove();
                     });
                     _this.updateSelectedCount();
+
                     if (_this.idsToFollow.length > 0)
                     {
+                        //More users to follow still, start timer again.
                         nextId = _this.idsToFollow[0];
                         username = $("#username" + nextId).html();
 
                         $("#currentFollowStatus").html("Next user to follow is " + username + ".");
-                        _this.startInterval();
+                        _this.startFollowInterval();
                     }
                     else
                     {
+                        //We have finished following all users.
                         $("#currentFollowStatus").html("Done following all users.");
                         $("#closePopupBtn").show();
                         $("#loadingImageForFollowing").hide();
@@ -387,8 +434,8 @@ var FindToFollow = new function()
             })
             .fail(function()
             {
-                $("#results").addClass("error-message");
-                $("#results").html("An unexpected error occurred during the request.");
+                $("#currentFollowStatus").addClass("error-message");
+                $("#currentFollowStatus").html("An unexpected error occurred during the request.");
             });
 
     };
@@ -409,6 +456,10 @@ FindToFollow.FilterJsonRequest = function()
     this.friendToFollowerRatio = "";
     this.keywords = "";
 };
+/**
+ * Request sent to backend to follow user.
+ * @constructor
+ */
 FindToFollow.FollowJsonRequest = function()
 {
     this.toFollowUserId = -1;
