@@ -16,7 +16,7 @@ local.properties
 .settings/
 .loadpath
 .idea
-mykeys.txt
+config.php
 
 
 # External tool builders

@@ -22,12 +22,11 @@
  * THE SOFTWARE.
  */
 
-require_once('lib/timer.php');
-require_once('lib/TwitterAPIExchange.php');
-require_once('config.php');
-require_once('Web.php');
-
-FTF_Web::executeRequest($_POST);
-
+$apiKeys = array(
+    'oauth_access_token' => 'CHANGE_THIS',
+    'oauth_access_token_secret' => 'CHANGE_THIS',
+    'consumer_key' => 'CHANGE_THIS',
+    'consumer_secret' => 'CHANGE_THIS'
+);
 
 ?>

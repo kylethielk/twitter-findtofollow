@@ -16,7 +16,7 @@ Instructions
 
 Assuming you have a server capable of running php, the only non-standard requirement is that cURL is installed and activated. Personally I've been running [WAMP Server](http://www.wampserver.com/).
 
-We must then add our Twitter OAuth keys in FindToFollow.php.
+Rename **config.php.txt** to **config.php**. Then add your Twitter API keys into config.php. Note your api keys must have read/write access.
 
 Then simply load index.html in your browser and let the application do the rest.
 
