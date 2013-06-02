@@ -29,5 +29,4 @@ require_once('Web.php');
 
 FTF_Web::executeRequest($_POST);
 
-
 ?>

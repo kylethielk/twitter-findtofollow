@@ -230,6 +230,63 @@ class FTF_UserData
         }
         return $users;
     }
+
+    /**
+     * Updates the data for the given user in our cache. Will only update the supplied parameters if they
+     * are non-null and greater than 0 for numerics.
+     * @param Integer $userId Userid we are updating information form.
+     * @param Integer $dateFollowed 10 digit timestamp.
+     * @param Integer $dateUnfollowed 10 digit timestamp.
+     * @param Integer $downloadDate 10 digit timestamp.
+     * @param Object $userData User data from twitter.
+     */
+    public function updateUserData($userId, $dateFollowed = -1, $dateUnfollowed = -1, $downloadDate = -1, $userData = null)
+    {
+        $filename = './userdata/users/' . $userId . '.json';
+        $filePointer = fopen($filename, 'r');
+        $data = fread($filePointer, filesize($filename));
+        fclose($filePointer);
+
+        FTF_Web::$currentDriver->addLogMessage("Updating user data for " . $userId);
+
+        $userObject = json_decode($data);
+
+        $changeMade = false;
+        if ($dateFollowed > 0 && is_numeric($dateFollowed))
+        {
+            FTF_Web::$currentDriver->addLogMessage("Setting DateFollowed to: " . $dateFollowed);
+            $userObject->dateFollowed = $dateFollowed;
+            $changeMade = true;
+        }
+        if ($dateUnfollowed > 0 && is_numeric($dateUnfollowed))
+        {
+            FTF_Web::$currentDriver->addLogMessage("Setting DateUnfollowed to: " . $dateUnfollowed);
+            $userObject->dateUnfollowed = $dateUnfollowed;
+            $changeMade = true;
+        }
+        if ($downloadDate > 0 && is_numeric($downloadDate))
+        {
+            FTF_Web::$currentDriver->addLogMessage("Setting DownloadDate to: " . $downloadDate);
+            $userObject->downloadDate = $downloadDate;
+            $changeMade = true;
+        }
+        if (isset($userData))
+        {
+            FTF_Web::$currentDriver->addLogMessage("Updating user data from twitter");
+            $userObject->userData = $userData;
+            $changeMade = true;
+        }
+
+        if ($changeMade)
+        {
+            FTF_Web::$currentDriver->addLogMessage("Writing changes to file." . json_encode($userObject));
+            $filePointer = fopen($filename, 'w');
+            fwrite($filePointer, json_encode($userObject));
+            fclose($filePointer);
+        }
+
+
+    }
 }
 
 ?>
