@@ -295,7 +295,7 @@ var FindToFollow = new function()
         }
     };
     /**
-     * Called by Follow Users button. Opens the popup that allows us to start staggered following.
+     * Called by Follow Users button. Opens the popup that allows us to start automatic following.
      */
     this.openFollowPopup = function()
     {
@@ -335,7 +335,7 @@ var FindToFollow = new function()
      * User triggered after setting follow interval.
      * @private
      */
-    this.startStaggeredFollowing = function()
+    this.startAutomaticFollowing = function()
     {
         this.followIntervalTimeMinimum = parseInt($("#followIntervalTimeMinimum").val());
         this.followIntervalTimeMaximum = parseInt($("#followIntervalTimeMaximum").val());

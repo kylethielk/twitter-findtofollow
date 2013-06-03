@@ -110,7 +110,7 @@
         <p>Once you have some filtered results, select people by clicking the row or the checkbox (selected row will be
             marked as green). Then click "Follow Users" button to get started. A popup will be launched where you will
             enter in seconds
-            the amount of time in between each follow. This allows for automatic, staggered following of each
+            the amount of time in between each follow. This allows for automatic, successive following of each
             person. We don't want to blast follow a bunch of people and trigger twitter's alarms. Try starting with
             300-600 seconds.</p>
 
@@ -151,7 +151,7 @@
             <input type="text" id="followIntervalTimeMaximum" name="followIntervalTimeMaximum"
                    title="The amount of time between each follow."
                    value="600"/>
-            <input type="button" id="startFollowingBtn" onclick="FindToFollow.startStaggeredFollowing();"
+            <input type="button" id="startFollowingBtn" onclick="FindToFollow.startAutomaticFollowing();"
                    value="Start Following" class="blue-button"/>
         </div>
         <div id="followStatus">

@@ -197,6 +197,7 @@ input {
     border-width: 0 0 1px 0;
     border-color: #CCC;
     border-style: solid;
+    width: 590px;
 }
 
 .user-table .picture-td {
@@ -208,7 +209,7 @@ input {
 }
 
 .user-table .description-td {
-    width: 375px;
+    width: 460px;
 }
 
 .user-table td {

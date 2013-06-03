@@ -11,6 +11,8 @@ The application also keeps track of users that you are following and those that 
 
 ![twitter-findtofollow Screenshot](https://github.com/kylethielk/twitter-findtofollow/blob/master/images/screenshot.png?raw=true)
 
+![twitter-findtofollow Automatic Following Screenshot](https://github.com/kylethielk/twitter-findtofollow/blob/master/images/screenshot-2.png?raw=true)
+
 Instructions
 ------------
 
@@ -20,12 +22,17 @@ Rename **config.php.txt** to **config.php**. Then add your Twitter API keys into
 
 Then simply load index.html in your browser and let the application do the rest.
 
+Updates
+-------
+
+**June 3, 2013** - You can now follow other users automatically from within the application. No more opening 25 tabs at once to follow users. The following is automatic and done at random intervals based on a time range you specifiy.
+
+**May 20, 2013**- Initial release of Twitter-FindToFollow. Filtering fully functional but we still need to be able to follow from within the application.
+
 Limitations
 -----------
 
 This first pass is fully functional but is void of error checking. So far it has only been used for personal use on a local webserver so is lacking in basic security checks, input validation  etc..
-
-Currently each filtered user is presented with their basic information and a link to open their twitter profile where you can then follow the user. The next iteration will allow you to follow them directly from the application, rather than having to visit their profile page.
 
 Credit
 ------
