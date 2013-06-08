@@ -46,6 +46,12 @@ class FTF_UserData
      */
     public $friendIds;
 
+    /**
+     * List of users in our queue to be followed.
+     * @var
+     */
+    public $queuedUserIds;
+
 
     public function FTF_UserData($twitterUsername)
     {
@@ -67,10 +73,11 @@ class FTF_UserData
             //Write blank file to keep track of user's we are following
             $primaryFilePointer = fopen($primaryFileName, 'w');
 
-            fwrite($primaryFilePointer, '{"friendIds":[]}');
+            fwrite($primaryFilePointer, '{"friendIds":[],queuedUserIds:[]}');
             fclose($primaryFilePointer);
 
             $this->friendIds = array();
+            $this->queuedUserIds = array();
         }
         else
         {
@@ -80,6 +87,7 @@ class FTF_UserData
 
             $readObject = json_decode($read);
             $this->friendIds = (array)$readObject->friendIds;
+            $this->queuedUserIds = (array)$readObject->queuedUserIds;
         }
 
     }
@@ -130,6 +138,27 @@ class FTF_UserData
     }
 
     /**
+     * Add a list of userIds to our queue. Be sure to call flushPrimaryUserData to persist
+     * to filesystem.
+     * @param array $userIds
+     */
+    public function mergeInUserIdsToQueue($userIds)
+    {
+        if (!isset($this->queuedUserIds) || !is_array($this->queuedUserIds))
+        {
+            $this->queuedUserIds = array();
+        }
+        else if (!is_array($userIds))
+        {
+            $userIds = array();
+        }
+
+        $diff = array_diff($userIds, $this->queuedUserIds);
+        $this->queuedUserIds = array_merge($this->queuedUserIds, array_unique($diff));
+
+    }
+
+    /**
      * Merge in friends to our existing list of friends. Must call flushPrimaryUserData to
      * write to disk.
      * @param $friendIds Array List of friend ids to merge in.
@@ -168,6 +197,7 @@ class FTF_UserData
 
         $toWrite = (Object)array();
         $toWrite->friendIds = $this->friendIds;
+        $toWrite->queuedUserIds = $this->queuedUserIds;
 
         $primaryFilePointer = fopen($primaryFileName, 'w');
         fwrite($primaryFilePointer, json_encode($toWrite));

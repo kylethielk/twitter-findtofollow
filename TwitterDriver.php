@@ -22,29 +22,22 @@
  * THE SOFTWARE.
  */
 require_once('UserData.php');
+require_once("Driver.php");
 
 /**
  * Parent class for all of our driver classes that interact with the Twitter API.
  * Class FTF_TwitterDriver
  */
-class FTF_TwitterDriver
+class FTF_TwitterDriver extends FTF_Driver
 {
     /**
      * @var array Associative Array of Twitter OAuth Keys.
      */
     protected $apiKeys;
     /**
-     * @var FTF_UserData
-     */
-    protected $userData;
-    /**
      * @var TwitterAPIExchange
      */
     protected $twitterApi;
-    /**
-     * @var array Log Messages.
-     */
-    private $logArray = array();
 
     /**
      * Initialize this driver.
@@ -53,11 +46,12 @@ class FTF_TwitterDriver
      */
     public function __construct($apiKeys, $twitterUsername)
     {
+        parent::__construct($twitterUsername);
+
         $this->apiKeys = $apiKeys;
-        $this->twitterUsername = $twitterUsername;
         $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
 
-        $this->userData = new FTF_UserData($twitterUsername);
+
     }
 
     /**
@@ -80,29 +74,6 @@ class FTF_TwitterDriver
 
         return false;
 
-    }
-
-    /**
-     * Generates a string of all log entries.
-     * @return string Log String.
-     */
-    public function generateLog()
-    {
-        $message = '';
-        foreach ($this->logArray as $log)
-        {
-            $message .= $log;
-        }
-        return $message;
-    }
-
-    /**
-     * Add a message to the log.
-     * @param $message String The message to add to the log.
-     */
-    public function addLogMessage($message)
-    {
-        $this->logArray[] = $message . '<br />';
     }
 
     /**

@@ -214,10 +214,10 @@ class FTF_Filter extends FTF_TwitterDriver
     {
         $html = '
             <div class="all-checkbox">
-                <input type="checkbox" id="selectAllCheckbox" onclick="FindToFollow.checkAllClicked(event);">All
+                <input type="checkbox" id="selectAllCheckbox" onclick="FindToFollow.Filter.checkAllClicked(event);">All
             </div>
             <div class="follow-btn">
-                <div id="followBtn" onclick="FindToFollow.openFollowPopup();" class="blue-button">Start Following (<span id="selectedCount">0</span>)</div>
+                <div id="followBtn" onclick="FindToFollow.Filter.addSelectedUsersToQueue();" class="blue-button">Add To Queue (<span id="filterPageSelectedCount">0</span>)</div>
             </div>
             <br />';
         $counter = 1;
@@ -225,7 +225,7 @@ class FTF_Filter extends FTF_TwitterDriver
 
         foreach ($this->filteredUsers as $user)
         {
-            $html = $html . '<table width="500" class="user-table" id="userRow' . $user->id . '" onclick="FindToFollow.userTableRowClicked(event);">
+            $html = $html . '<table width="500" class="user-table" id="filterPageUserRow' . $user->id . '" onclick="FindToFollow.userTableRowClicked(event);">
                 <tr>
                 <td valign="top" class="number-td">
                     ' . $counter . '.

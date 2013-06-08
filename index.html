@@ -8,18 +8,70 @@
 </head>
 <body class="elements">
 
+<div id="errorBar" style="display: none">
+
+</div>
 <div id="wrapper">
     <ul class="tab-wrapper">
 
         <li id="statsPageTab" onclick="FindToFollow.changePage('statsPage');">Stats</li>
         <li id="helpPageTab" onclick="FindToFollow.changePage('helpPage');">Help</li>
+        <li id="followPageTab" onclick="FindToFollow.changePage('followPage');">Follow</li>
         <li id="filterPageTab" onclick="FindToFollow.changePage('filterPage');" class="tab-selected">Find & Follow</li>
     </ul>
+    <div id="followPage" class="page" style="display:none">
+        <div class="leftColumn">
+            <div class="content-block">
+                <input type="button" value="Start Following Users" id="followUsersBtn"
+                       onclick="FindToFollow.Filter.sendFilterRequest();return false;"
+                       class="blue-button"/>
+
+                <h2>Required Fields</h2>
+                <label for="followIntervalTimeMinimum">Min Time (s):</label>
+                <input type="text" id="followIntervalTimeMinimum" name="followIntervalTimeMinimum"
+                       title="The amount of time between each follow."
+                       value="60"/>
+                <label for="followIntervalTimeMaximum">Max Time (s):</label>
+                <input type="text" id="followIntervalTimeMaximum" name="followIntervalTimeMaximum"
+                       title="The amount of time between each follow."
+                       value="180"/>
+
+            </div>
+        </div>
+        <div class="rightColumn">
+            <div class="content-block" style="min-height: 709px">
+
+                <div id="followStatus">
+
+                    <p>We have followed <span id="currentFollowingNumber">0</span> out of <span
+                            id="totalFollowingNumber">0</span>
+                        users.</p>
+
+                    <p>Next follow in <span id="nextFollowTime">0</span> seconds.</p>
+
+                    <p id="currentFollowStatus"></p>
+
+                    <img id="followLoadingImage" src="./images/ajax-loader.gif" style="display:none"/>
+
+                    <input type="button" id="closePopupBtn" style="display:none" value="Close Window"
+                           onclick="FindToFollow.closeFollowPopup();"/>
+                </div>
+
+                <br/>
+
+                <div id="followResults">
+
+                </div>
+            </div>
+
+
+        </div>
+    </div>
     <div id="filterPage" class="page">
-        <div id="leftColumn">
+        <div class="leftColumn">
             <div class="content-block">
                 <input type="button" value="Filter Followers" id="sendRequestBtn"
-                       onclick="FindToFollow.sendFilterRequest();return false;"
+                       onclick="FindToFollow.Filter.sendFilterRequest();return false;"
                        class="blue-button"/>
 
                 <h2>Required Fields</h2>
@@ -59,11 +111,11 @@
                 <textarea id="keywords" title="Used to search user's bio."></textarea>
             </div>
         </div>
-        <div id="rightColumn">
+        <div class="rightColumn">
             <div class="content-block" style="min-height: 709px">
 
                 <br/>
-                <img id="loadingImage" src="./images/ajax-loader.gif" style="display: none"/>
+                <img id="filterLoadingImage" src="./images/ajax-loader.gif" style="display: none"/>
 
                 <div id="logContainer" style="display: none">
                     <a href="javascript:void(0);" id="logVisibilityLink" onclick="FindToFollow.toggleLogVisibility()">Show
@@ -73,7 +125,7 @@
                 </div>
 
 
-                <div id="results">
+                <div id="filterResults">
 
                 </div>
             </div>
@@ -154,21 +206,7 @@
             <input type="button" id="startFollowingBtn" onclick="FindToFollow.startAutomaticFollowing();"
                    value="Start Following" class="blue-button"/>
         </div>
-        <div id="followStatus">
 
-            <p>We have followed <span id="currentFollowingNumber">0</span> out of <span
-                    id="totalFollowingNumber">0</span>
-                users.</p>
-
-            <p>Next follow in <span id="nextFollowTime">0</span> seconds.</p>
-
-            <p id="currentFollowStatus"></p>
-
-            <img id="loadingImageForFollowing" src="./images/ajax-loader.gif" style="display:none"/>
-
-            <input type="button" id="closePopupBtn" style="display:none" value="Close Window"
-                   onclick="FindToFollow.closeFollowPopup();"/>
-        </div>
 
     </div>
 </div>

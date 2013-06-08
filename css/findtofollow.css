@@ -2,6 +2,7 @@ body {
     background-color: rgb(231, 231, 231);
     font-family: "Georgia";
     font-size: 0.9em;
+    margin: 0;
 }
 
 h1 {
@@ -57,7 +58,7 @@ div {
     padding: 15px;
 }
 
-#leftColumn {
+.leftColumn {
     width: 275px;
     float: left;
     margin: 0;
@@ -68,7 +69,7 @@ div {
     border-top-left-radius: 5px;
 }
 
-#leftColumn .content-block {
+.leftColumn .content-block {
     border-bottom-left-radius: 5px;
     border-top-left-radius: 5px;
 }
@@ -78,27 +79,27 @@ div {
     width: 45px;
 }
 
-#leftColumn input,
-#leftColumn select {
+.leftColumn input,
+.leftColumn select {
     margin: 10px 0 0 12px;
 }
 
-#leftColumn textarea {
+.leftColumn textarea {
     width: 202px;
     height: 75px;
     margin: 15px 2px 0 12px;
 }
 
-#leftColumn label {
+.leftColumn label {
     display: block;
     margin: 10px 0 0 5px;
 }
 
-#leftColumn #sendRequestBtn {
+.leftColumn #sendRequestBtn {
     margin: 5px 0 10px 50px;
 }
 
-#rightColumn {
+.rightColumn {
     width: 635px;
     float: left;
     margin: 0 0 15px 0;
@@ -109,7 +110,7 @@ div {
     border-bottom-left-radius: 5px;
 }
 
-#rightColumn .content-block {
+.rightColumn .content-block {
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
     box-shadow: -3px 0px 10px rgba(184, 184, 184, 0.9);
@@ -264,7 +265,7 @@ input {
     padding: 15px;
 }
 
-#results {
+#filterResults {
     position: relative;
     padding-top: 45px;
 }
@@ -345,4 +346,13 @@ input {
 
 .error-message {
     color: red;
+}
+#errorBar {
+    height: auto;
+    padding: 1px;
+    width:100%;
+    background-color: #ffdadd;
+    color: rgb(199, 0, 0);
+    text-align: center;
+    margin: 0;
 }

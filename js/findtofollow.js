@@ -3,6 +3,254 @@
  */
 var FindToFollow = new function()
 {
+    this.Filter = new function()
+    {
+        /**
+         * Minimize the log container so that only "Show Log" link is visible.
+         */
+        this.minimizeLog = function()
+        {
+            $("#logVisibilityLink").text("Show Log");
+            $("#logText").hide();
+        };
+        /**
+         * Maximize the log window to see all the log details.
+         */
+        this.maximizeLog = function()
+        {
+            $("#logVisibilityLink").text("Hide Log");
+            $("#logText").show();
+        };
+        /**
+         * If minimized will maximize the log container and visa versa.
+         */
+        this.toggleLogVisibility = function()
+        {
+            if ($("#logText").is(":visible"))
+            {
+                this.minimizeLog();
+            }
+            else
+            {
+                this.maximizeLog();
+            }
+        };
+        /**
+         * Obscure the results, just a nice UI effect for when we are refreshing the results.
+         */
+        this.obscureResults = function()
+        {
+            $("#filterResults").fadeTo(500, 0.2);
+            $("#logContainer").fadeTo(500, 0.2);
+        };
+        /**
+         * Fades back to full opacity once results have been refreshed.
+         */
+        this.unObscureResults = function()
+        {
+            $("#filterResults").fadeTo(250, 1);
+            $("#logContainer").fadeTo(250, 1);
+        };
+        /**
+         * Send a request to backend to find us some followers. This is called by the Filter Followers button
+         * on the UI.
+         */
+        this.sendFilterRequest = function()
+        {
+            $("#filterResults").removeClass("error-message");
+
+            var requestObject = this.buildFilterRequestObject();
+
+            $("#sendRequestBtn").attr("disabled", "disabled");
+
+            if (this.validateFilterRequest(requestObject))
+            {
+                $("#filterLoadingImage").show();
+                this.obscureResults();
+
+                var _this = this;
+
+                $.post("FindToFollow.php", requestObject)
+                    .done(function(response)
+                    {
+                        response = JSON.parse(response);
+
+                        //Log container is hidden before first request is sent.
+                        $("#logContainer").show();
+                        //Set log text.
+                        $("#logText").html(response.log);
+                        //Default to minimized
+                        _this.minimizeLog();
+
+                        if (response.hasError)
+                        {
+                            $("#filterResults").addClass("error-message");
+                            $("#filterResults").html("Error occurred: " + response.errorMessage);
+                            _this.maximizeLog();
+                        }
+                        else
+                        {
+                            $("#filterResults").html(response.html);
+                        }
+                    })
+                    .fail(function()
+                    {
+                        $("#filterResults").addClass("error-message");
+                        $("#filterResults").html("An unexpected error occurred during the request.");
+                    })
+                    .always(function()
+                    {
+                        $("#sendRequestBtn").removeAttr("disabled");
+                        $("#filterLoadingImage").hide();
+                        _this.unObscureResults();
+                    });
+            }
+            else
+            {
+                $("#sendRequestBtn").removeAttr("disabled");
+            }
+        };
+        this.addSelectedUsersToQueue = function()
+        {
+            var idsToQueue = $("#filterPage input.row-checkbox:checked").map(function()
+            {
+                return this.value;
+            }).get();
+
+            //Make sure we have atleast one item selected
+            if (idsToQueue.length < 1)
+            {
+                alert("You must select at least one person to add to queue.");
+                return;
+            }
+
+            var requestObject = new FindToFollow.AddQueueJsonRequest();
+            requestObject.queuedUserIds = idsToQueue;
+            requestObject.twitterUsername = $("#twitterUsername").val();
+
+            var _this = this;
+            $.post("FindToFollow.php", requestObject)
+                .done(function(response)
+                {
+                    response = JSON.parse(response);
+
+                    if (response.hasError)
+                    {
+                        _this.showErrorMessage("Error: " + response.errorMessage);
+                    }
+                    else
+                    {
+                        for (var index in idsToQueue)
+                        {
+                            var id = idsToQueue[index];
+                            //Remove rows
+                            $("#filterPageUserRow" + id).fadeOut(400, function()
+                            {
+                                $(this).remove();
+                                _this.updateSelectedCount();
+                            });
+                        }
+                    }
+                })
+                .fail(function()
+                {
+                    _this.showErrorMessage("Unexpected error when adding users to queue.");
+                });
+
+
+        };
+        /**
+         * Validates our request to make sure we are sending required data. Marks invalid fields on UI as well.
+         * @param {FindToFollow.FilterJsonRequest} requestObject The object to send to backend.
+         * @returns {boolean} True if valid, false otherwise.
+         */
+        this.validateFilterRequest = function(requestObject)
+        {
+
+            var hasError = false;
+            if (!requestObject.twitterUsername)
+            {
+                hasError = true;
+                $("#twitterUsername").addClass("input-error");
+            }
+            else
+            {
+                $("#twitterUsername").removeClass("input-error");
+            }
+
+            if (!requestObject.sourceUsername)
+            {
+                hasError = true;
+                $("#sourceUsername").addClass("input-error");
+            }
+            else
+            {
+                $("#sourceUsername").removeClass("input-error");
+            }
+
+            if (!requestObject.followerLimit)
+            {
+                hasError = true;
+                $("#followerLimit").addClass("input-error");
+            }
+            else
+            {
+                $("#followerLimit").removeClass("input-error");
+            }
+
+            if (hasError)
+            {
+                $("#sendRequestBtn").addClass("input-error");
+            }
+            else
+            {
+                $("#sendRequestBtn").removeClass("input-error");
+            }
+
+            return !hasError;
+        };
+        /**
+         * Dynamically builds request object to send to backend. HTML elements must have id's that match each property of FindToFollow.FilterJsonRequest.
+         * @returns {FindToFollow.FilterJsonRequest} .
+         */
+        this.buildFilterRequestObject = function()
+        {
+            var jsonRequest = new FindToFollow.FilterJsonRequest();
+
+            for (var i in jsonRequest)
+            {
+                jsonRequest[i] = $("#" + i).val();
+            }
+            jsonRequest.action = "run";
+
+            return jsonRequest;
+
+        };
+        /**
+         * Select or deselect all rows. Called by All checkbox on Filter UI.
+         * @param {MouseEvent} event Triggered by the click.
+         */
+        this.checkAllClicked = function(event)
+        {
+            var checkBox = $(event.currentTarget);
+
+            var checkedValue = true;
+            if (!checkBox.is(":checked"))
+            {
+                checkedValue = false;
+            }
+
+            $(".row-checkbox").each(function()
+            {
+                FindToFollow.setRowSelectedState($(this).val(), $(this), checkedValue);
+            });
+
+            this.updateSelectedCount();
+
+        };
+
+        return this;
+    };
     /**
      * The minimum time between follows.
      * @type {number}
@@ -33,7 +281,31 @@ var FindToFollow = new function()
      * @type {number}
      */
     this.followTicks = 0;
+    this.currentPageId = "filterPage";
 
+    /**
+     * Show global error message.
+     * @param {String} message The error message to display.
+     * @param {number=} timeout Defaults to 15000, time in MS to show the message.
+     */
+    this.showErrorMessage = function(message, timeout)
+    {
+        timeout = timeout || 15000;
+
+        $("#errorBar").show();
+
+        var messageId = Math.random();
+
+        $("#errorBar").append('<p id="' + messageId + '">' + message + '</p>');
+        setTimeout(function()
+        {
+            $("#" + messageId).remove();
+            if ($("#errorBar").children("*").length < 1)
+            {
+                $("#errorBar").hide();
+            }
+        })
+    };
     /**
      * Called each time a tab is clicked.
      * @param page
@@ -54,212 +326,8 @@ var FindToFollow = new function()
             }
         })
     };
-    /**
-     * Minimize the log container so that only "Show Log" link is visible.
-     */
-    this.minimizeLog = function()
-    {
-        $("#logVisibilityLink").text("Show Log");
-        $("#logText").hide();
-    };
-    /**
-     * Maximize the log window to see all the log details.
-     */
-    this.maximizeLog = function()
-    {
-        $("#logVisibilityLink").text("Hide Log");
-        $("#logText").show();
-    };
-    /**
-     * If minimized will maximize the log container and visa versa.
-     */
-    this.toggleLogVisibility = function()
-    {
-        if ($("#logText").is(":visible"))
-        {
-            this.minimizeLog();
-        }
-        else
-        {
-            this.maximizeLog();
-        }
-    };
-    /**
-     * Obscure the results, just a nice UI effect for when we are refreshing the results.
-     */
-    this.obscureResults = function()
-    {
-        $("#results").fadeTo(500, 0.2);
-        $("#logContainer").fadeTo(500, 0.2);
-    };
-    /**
-     * Fades back to full opacity once results have been refreshed.
-     */
-    this.unObscureResults = function()
-    {
-        $("#results").fadeTo(250, 1);
-        $("#logContainer").fadeTo(250, 1);
-    };
-    /**
-     * Send a request to backend to find us some followers. This is called by the Filter Followers button
-     * on the UI.
-     */
-    this.sendFilterRequest = function()
-    {
-        $("#results").removeClass("error-message");
 
-        var requestObject = this.buildFilterRequestObject();
-        requestObject.action = "run";
 
-        $("#sendRequestBtn").attr("disabled", "disabled");
-
-        if (this.validateFilterRequest(requestObject))
-        {
-            $("#loadingImage").show();
-            this.obscureResults();
-
-            var _this = this;
-
-            $.post("FindToFollow.php", requestObject)
-                .done(function(response)
-                {
-                    response = JSON.parse(response);
-
-                    //Log container is hidden before first request is sent.
-                    $("#logContainer").show();
-                    //Set log text.
-                    $("#logText").html(response.log);
-                    //Default to minimized
-                    _this.minimizeLog();
-
-                    if (response.hasError)
-                    {
-                        $("#results").addClass("error-message");
-                        $("#results").html("Error occurred: " + response.errorMessage);
-                        _this.maximizeLog();
-                    }
-                    else
-                    {
-                        $("#results").html(response.html);
-                    }
-                })
-                .fail(function()
-                {
-                    $("#results").addClass("error-message");
-                    $("#results").html("An unexpected error occurred during the request.");
-                })
-                .always(function()
-                {
-                    $("#sendRequestBtn").removeAttr("disabled");
-                    $("#loadingImage").hide();
-                    _this.unObscureResults();
-                });
-        }
-        else
-        {
-            $("#sendRequestBtn").removeAttr("disabled");
-        }
-    };
-    /**
-     * Validates our request to make sure we are sending required data. Marks invalid fields on UI as well.
-     * @param {FindToFollow.FilterJsonRequest} requestObject The object to send to backend.
-     * @returns {boolean} True if valid, false otherwise.
-     */
-    this.validateFilterRequest = function(requestObject)
-    {
-
-        var hasError = false;
-        if (!requestObject.twitterUsername)
-        {
-            hasError = true;
-            $("#twitterUsername").addClass("input-error");
-        }
-        else
-        {
-            $("#twitterUsername").removeClass("input-error");
-        }
-
-        if (!requestObject.sourceUsername)
-        {
-            hasError = true;
-            $("#sourceUsername").addClass("input-error");
-        }
-        else
-        {
-            $("#sourceUsername").removeClass("input-error");
-        }
-
-        if (!requestObject.followerLimit)
-        {
-            hasError = true;
-            $("#followerLimit").addClass("input-error");
-        }
-        else
-        {
-            $("#followerLimit").removeClass("input-error");
-        }
-
-        if (hasError)
-        {
-            $("#sendRequestBtn").addClass("input-error");
-        }
-        else
-        {
-            $("#sendRequestBtn").removeClass("input-error");
-        }
-
-        return !hasError;
-    };
-    /**
-     * Dynamically builds request object to send to backend. HTML elements must have id's that match each property of FindToFollow.FilterJsonRequest.
-     * @returns {FindToFollow.FilterJsonRequest} .
-     */
-    this.buildFilterRequestObject = function()
-    {
-        var jsonRequest = new FindToFollow.FilterJsonRequest();
-
-        for (var i in jsonRequest)
-        {
-            jsonRequest[i] = $("#" + i).val();
-        }
-
-        return jsonRequest;
-
-    };
-    /**
-     * Select or deselect all rows. Called by All checkbox on UI.
-     * @param {MouseEvent} event Triggered by the click.
-     */
-    this.checkAllClicked = function(event)
-    {
-        var checkBox = $(event.currentTarget);
-
-        var checkedValue = true;
-        if (!checkBox.is(":checked"))
-        {
-            checkedValue = false;
-        }
-
-        var _this = this;
-        $(".row-checkbox").each(function()
-        {
-            _this.setRowSelectedState($(this).val(), $(this), checkedValue);
-        });
-
-        this.updateSelectedCount();
-
-    };
-    /**
-     * Counts the number of selected rows, and updates the Follow Users button with result.
-     */
-    this.updateSelectedCount = function()
-    {
-        var checkedCount = $("input.row-checkbox:checked").map(function()
-        {
-            return this.value
-        }).get().length;
-        $("#selectedCount").html(checkedCount);
-    };
     /**
      * Handles a user table row being clicked.
      * @param {MouseEvent} event Triggered by the click.
@@ -276,6 +344,7 @@ var FindToFollow = new function()
         this.setRowSelectedState(id, checkBox, !currentlyChecked);
         this.updateSelectedCount()
     };
+
     /**
      * Sets the visible state of a row.
      * @param {number} id Row id.
@@ -284,16 +353,29 @@ var FindToFollow = new function()
      */
     this.setRowSelectedState = function(id, checkBox, selected)
     {
+        var rowId = "#" + this.currentPageId + "userRow" + id;
         if (!selected)
         {
-            $("#userRow" + id).removeClass("user-table-selected");
+            $("#" + this.currentPageId + "UserRow" + id).removeClass("user-table-selected");
             checkBox.prop("checked", false);
         } else
         {
-            $("#userRow" + id).addClass("user-table-selected");
+            $("#" + this.currentPageId + "UserRow" + id).addClass("user-table-selected");
             checkBox.prop("checked", true);
         }
     };
+    /**
+     * Counts the number of selected rows, and updates the Follow Users button with result.
+     */
+    this.updateSelectedCount = function()
+    {
+        var checkedCount = $("#" + this.currentPageId + " input.row-checkbox:checked").map(function()
+        {
+            return this.value
+        }).get().length;
+        $("#" + this.currentPageId + "SelectedCount").html(checkedCount);
+    };
+
     /**
      * Called by Follow Users button. Opens the popup that allows us to start automatic following.
      */
@@ -314,7 +396,7 @@ var FindToFollow = new function()
         //Re-initialize items to starting point.
         $("#dialogBackground").show();
         $("#startFollowingBtn").removeAttr("disabled");
-        $("#loadingImageForFollowing").hide();
+        $("#followLoadingImage").hide();
         $("#currentFollowStatus").html("");
         $("#currentFollowStatus").removeClass("error-message");
         $("#nextFollowTime").html("N/A");
@@ -375,7 +457,7 @@ var FindToFollow = new function()
         this.followIntervalTime = this.generateIntervalTime();
 
         $("#startFollowingBtn").attr("disabled", "disabled");
-        $("#loadingImageForFollowing").show();
+        $("#followLoadingImage").show();
 
         //Start by following first user immediately, rather than waiting for first countdown.
         this.followNextUser();
@@ -468,7 +550,7 @@ var FindToFollow = new function()
                         //We have finished following all users.
                         $("#currentFollowStatus").html("Done following all users.");
                         $("#closePopupBtn").show();
-                        $("#loadingImageForFollowing").hide();
+                        $("#followLoadingImage").hide();
                     }
                 }
             })
@@ -495,6 +577,7 @@ FindToFollow.FilterJsonRequest = function()
     this.maximumFriends = -1;
     this.friendToFollowerRatio = "";
     this.keywords = "";
+    this.action = "run";
 };
 /**
  * Request sent to backend to follow user.
@@ -504,4 +587,24 @@ FindToFollow.FollowJsonRequest = function()
 {
     this.toFollowUserId = -1;
     this.twitterUsername = "";
+    this.action = "follow";
+};
+/**
+ * Request sent to backend to add users to queue.
+ * @constructor
+ */
+FindToFollow.AddQueueJsonRequest = function()
+{
+    this.queuedUserIds = [];
+    this.twitterUsername = "";
+    this.action = "addqueue";
+};
+/**
+ * Request sent to backend to fetch users in queue.
+ * @constructor
+ */
+FindToFollow.FetchQueueJsonRequest = function()
+{
+    this.twitterUsername = "";
+    this.action = "fetchqueue";
 };

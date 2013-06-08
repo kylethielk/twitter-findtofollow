@@ -24,7 +24,7 @@
 require_once('TwitterDriver.php');
 
 /**
- * Controls the flow of following an user.
+ * Controls the flow of following users.
  *
  * Class FTF_Follow
  */

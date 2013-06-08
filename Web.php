@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 
+require_once('QueueAddRequest.php');
 require_once('FilterRequest.php');
 require_once('FollowRequest.php');
 require_once('WebResponse.php');
@@ -37,6 +38,9 @@ class FTF_Web
 {
     const ACTION_RUN = 'run';
     const ACTION_FOLLOW = 'follow';
+    const ACTION_ADD_QUEUE = 'addqueue';
+    const ACTION_FETCH_QUEUE = 'fetchqueue';
+
     /**
      * @var FTF_Filter
      */
@@ -62,6 +66,46 @@ class FTF_Web
         {
             FTF_Web::followUser($data);
         }
+        else if ($action == FTF_Web::ACTION_ADD_QUEUE)
+        {
+            FTF_Web::addToQueue($data);
+        }
+        else if ($action == FTF_Web::ACTION_FETCH_QUEUE)
+        {
+            FTF_Web::fetchQueue($data);
+        }
+    }
+
+    public static function fetchQueue($data)
+    {
+        $request = new FTF_QueueAddRequest($data);
+
+        if (!isset($request) || !$request->validate())
+        {
+            FTF_Web::writeErrorResponse('Queue Request invalid or not supplied.' . print_r($request, true));
+        }
+
+        $userData = new FTF_UserData($request->twitterUsername);
+        $userData->mergeInUserIdsToQueue($request->queuedUserIds);
+        $userData->flushPrimaryUserData();
+
+        FTF_Web::writeValidResponse("", "");
+    }
+
+    public static function addToQueue($data)
+    {
+        $request = new FTF_QueueAddRequest($data);
+
+        if (!isset($request) || !$request->validate())
+        {
+            FTF_Web::writeErrorResponse('Queue Request invalid or not supplied.' . print_r($request, true));
+        }
+
+        $userData = new FTF_UserData($request->twitterUsername);
+        $userData->mergeInUserIdsToQueue($request->queuedUserIds);
+        $userData->flushPrimaryUserData();
+
+        FTF_Web::writeValidResponse("", "");
     }
 
     /**
