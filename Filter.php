@@ -52,8 +52,8 @@ class FTF_Filter extends FTF_TwitterDriver
     public $filteredUsers;
 
     /**
-     * @param $apiKeys array .
-     * @param $filterRequest FTF_FilterRequest .
+     * @param array $apiKeys Our twitter api keys.
+     * @param FTF_FilterRequest $filterRequest .
      */
     public function __construct($apiKeys, $filterRequest)
     {
@@ -71,39 +71,12 @@ class FTF_Filter extends FTF_TwitterDriver
      */
     public function buildFriendIds()
     {
-        //Reset api exchange
-        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
+        $friendIds = $this->twitterFriendsIds($this->filterRequest->twitterUsername);
 
-        $url = 'https://api.twitter.com/1.1/friends/ids.json';
-        $getField = '?cursor=-1&screen_name=' . $this->filterRequest->twitterUsername . '&count=5000';
-        $requestMethod = 'GET';
+        $this->addLogMessage('You have ' . ($friendIds ? count($friendIds) : 0) . ' friends according to twitter.');
 
-        $this->timer->add_cp('Start: Building Friend Ids ');
-
-        $response = $this->twitterApi
-            ->setGetfield($getField)
-            ->buildOauth($url, $requestMethod)
-            ->performRequest();
-
-        $this->timer->add_cp('End: Building Friend Ids ');
-
-        $friendIdResponse = json_decode($response);
-
-        $errorMessage = $this->checkForTwitterErrors($friendIdResponse);
-        if ($errorMessage === false)
-        {
-            $this->addLogMessage('You have ' . ($friendIdResponse && $friendIdResponse->ids ? count($friendIdResponse->ids) : 0) . ' friends according to twitter.');
-
-            $this->userData->mergeInFriendIds($friendIdResponse->ids);
-            $this->userData->flushPrimaryUserData();
-        }
-        else
-        {
-            $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
-            FTF_Web::writeErrorResponse($errorMessage, $this->generateLog());
-        }
-
-
+        $this->userData->mergeInFriendIds($friendIds);
+        $this->userData->flushPrimaryUserData();
     }
 
     /**
@@ -111,38 +84,8 @@ class FTF_Filter extends FTF_TwitterDriver
      */
     public function buildFollowerIds()
     {
-        if (!isset($this->filterRequest->followerLimit) || $this->filterRequest->followerLimit > 5000)
-        {
-            $this->filterRequest->followerLimit = 5000;
-        }
 
-        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
-
-        $url = 'https://api.twitter.com/1.1/followers/ids.json';
-        $getField = '?cursor=-1&screen_name=' . $this->filterRequest->sourceUsername . '&count=' . $this->filterRequest->followerLimit;
-        $requestMethod = 'GET';
-
-        $this->timer->add_cp('Start: Building Follower Ids ');
-
-        $followerIdResponse = json_decode($this->twitterApi
-            ->setGetfield($getField)
-            ->buildOauth($url, $requestMethod)
-            ->performRequest());
-
-        $this->timer->add_cp('End: Building Follower Ids ');
-
-        $errorMessage = $this->checkForTwitterErrors($followerIdResponse);
-        if ($errorMessage === false)
-        {
-            $this->potentialFriendIds = $followerIdResponse->ids;
-        }
-        else
-        {
-            $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
-            FTF_Web::writeErrorResponse($errorMessage, $this->generateLog());
-        }
-
-
+        $this->potentialFriendIds = $this->twitterFollowersIds($this->filterRequest->sourceUsername, $this->filterRequest->followerLimit);
     }
 
     /**
@@ -188,56 +131,22 @@ class FTF_Filter extends FTF_TwitterDriver
 
     /**
      * Fetches full user objects from twitter.
-     * @param $twitterApi TwitterAPIExchange
      * @param $userIds array Twitter user id's to fetch data for.
      * @return array|mixed Array of user data.
      */
-    private function fetchUserDataFromTwitter($twitterApi, $userIds)
+    private function fetchUserDataFromTwitter($userIds)
     {
-        $users = array();
 
-        $url = 'https://api.twitter.com/1.1/users/lookup.json';
-        $requestMethod = 'POST';
+        $users = $this->twitterUsersLookup($userIds);
 
-        if ($userIds && count($userIds) > 0)
+        //Write new data to cache.
+        foreach ($users as $user)
         {
-            $ids_string = implode(',', $userIds);
-
-            $postfields = array(
-                'user_id' => $ids_string,
-            );
-
-            $random = rand(0, 15000);
-            $this->timer->add_cp('Start: Get User Information - ' . $random);
-
-            $response = $twitterApi
-                ->setPostfields($postfields)
-                ->buildOauth($url, $requestMethod)
-                ->performRequest();
-
-            $this->timer->add_cp('End: Get User Information - ' . $random);
-
-            $users = json_decode($response);
-
-            $errorMessage = $this->checkForTwitterErrors($users);
-            if ($errorMessage === false)
-            {
-                //Write new data to cache.
-                foreach ($users as $user)
-                {
-                    $friend = new FTF_Friend($user);
-                    $this->userData->writeUserToCache($friend);
-                }
-                $this->userData->flushUserListCache();
-            }
-            else
-            {
-                $users = array();
-                $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
-            }
-
-
+            $friend = new FTF_Friend($user);
+            $this->userData->writeUserToCache($friend);
         }
+        $this->userData->flushUserListCache();
+
 
         return $users;
     }
@@ -249,8 +158,6 @@ class FTF_Filter extends FTF_TwitterDriver
     public function buildFilteredFollowers()
     {
         $this->removeUsersAlreadyFollowed();
-
-        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
 
         $this->filteredUsers = array();
 
@@ -268,7 +175,7 @@ class FTF_Filter extends FTF_TwitterDriver
             $idObject = $this->breakIdsByCached($ids);
 
             //Get new and cached user data, and merge it so we can filter.
-            $newUsers = $this->fetchUserDataFromTwitter($this->twitterApi, $idObject->freshUserIds);
+            $newUsers = $this->fetchUserDataFromTwitter($idObject->freshUserIds);
             $cachedFollowers = $this->userData->fetchCachedUsers($idObject->cachedUserIds);
             $unfilteredUsers = array_merge($newUsers, $cachedFollowers);
 

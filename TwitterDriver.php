@@ -46,10 +46,16 @@ class FTF_TwitterDriver
      */
     private $logArray = array();
 
+    /**
+     * Initialize this driver.
+     * @param array $apiKeys Our twitter api keys.
+     * @param string $twitterUsername The username for who we are running this app for.
+     */
     public function __construct($apiKeys, $twitterUsername)
     {
         $this->apiKeys = $apiKeys;
         $this->twitterUsername = $twitterUsername;
+        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
 
         $this->userData = new FTF_UserData($twitterUsername);
     }
@@ -97,5 +103,146 @@ class FTF_TwitterDriver
     public function addLogMessage($message)
     {
         $this->logArray[] = $message . '<br />';
+    }
+
+    /**
+     * Pull all friend ids for the supplied user.
+     * @param string $username The username to pull friend ids for.
+     * @param int $cursor The twitter api cursor.
+     * @return array The friend ids.
+     */
+    public function twitterFriendsIds($username, $cursor = -1)
+    {
+        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
+        $url = 'https://api.twitter.com/1.1/friends/ids.json';
+
+        $getField = '?cursor=' . $cursor . '&screen_name=' . $username . '&count=150';
+        $requestMethod = 'GET';
+
+        $response = $this->twitterApi
+            ->setGetfield($getField)
+            ->buildOauth($url, $requestMethod)
+            ->performRequest();
+
+        $response = json_decode($response);
+
+        $errorMessage = $this->checkForTwitterErrors($response);
+        if ($errorMessage === false)
+        {
+
+            if ($response->next_cursor > 0)
+            {
+                return array_merge($response->ids, $this->twitterFriendsIds($username, $response->next_cursor_str));
+            }
+            else
+            {
+                return $response->ids;
+            }
+
+        }
+        else
+        {
+            $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
+            FTF_Web::writeErrorResponse($errorMessage, $this->generateLog());
+            return array();
+        }
+    }
+
+    /**
+     * Get a list of follower ids for the supplied username.
+     * @param string $username The person to pull followers for.
+     * @param int $maximum Optional, the maximum number of followers to pull.
+     * @param int $cursor Optional, The Twitter API cursor.
+     * @return array An array with all the follower ids.
+     */
+    public function twitterFollowersIds($username, $maximum = 75000, $cursor = -1)
+    {
+        if ($maximum > 75000)
+        {
+            $maximum = 75000;
+        }
+
+        if ($maximum <= 0)
+        {
+            return array();
+        }
+
+        $count = $maximum > 5000 ? 5000 : $maximum;
+
+        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
+
+        $url = 'https://api.twitter.com/1.1/followers/ids.json';
+        $getField = '?cursor=' . $cursor . '&screen_name=' . $username . '&count=' . $count;
+        $requestMethod = 'GET';
+
+        $response = json_decode($this->twitterApi
+            ->setGetfield($getField)
+            ->buildOauth($url, $requestMethod)
+            ->performRequest());
+
+        $errorMessage = $this->checkForTwitterErrors($response);
+        if ($errorMessage === false)
+        {
+            if ($response->next_cursor > 0)
+            {
+                return array_merge($response->ids, $this->twitterFollowersIds($username, $maximum - $count, $response->next_cursor_str));
+            }
+            else
+            {
+                return $response->ids;
+            }
+        }
+        else
+        {
+            $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
+            FTF_Web::writeErrorResponse($errorMessage, $this->generateLog());
+            return array();
+        }
+
+    }
+
+    /**
+     * Call to twitter API to get full profile information for provided userIds. Note can only process 100 userIds at once.
+     * @param array $userIds Array of twitter user ids.
+     * @return array Of Full Twitter User objects.
+     */
+    public function twitterUsersLookup($userIds)
+    {
+
+        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
+
+        $url = 'https://api.twitter.com/1.1/users/lookup.json';
+        $requestMethod = 'POST';
+
+        if ($userIds && count($userIds) > 0)
+        {
+            $idString = implode(',', $userIds);
+
+            $postfields = array(
+                'user_id' => $idString,
+            );
+
+
+            $response = $this->twitterApi
+                ->setPostfields($postfields)
+                ->buildOauth($url, $requestMethod)
+                ->performRequest();
+
+            $users = json_decode($response);
+
+            $errorMessage = $this->checkForTwitterErrors($users);
+            if ($errorMessage === false)
+            {
+                return $users;
+            }
+            else
+            {
+                $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
+                return array();
+
+            }
+
+        }
+        return array();
     }
 }
