@@ -21,30 +21,56 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-require_once('Driver.php');
+require_once(dirname(__FILE__) . '/Base.php');
 
 /**
  * Controls the flow of following users.
  *
- * Class FTF_Follow
+ * Class FTF_Driver_Queue
  */
-class FTF_Queue extends FTF_Driver
+class FTF_Driver_Queue extends FTF_Driver_Base
 {
     /**
-     * @var FTF_QueueRequest
+     * @var FTF_Request_Base
      */
     private $queueRequest;
 
 
     /**
-     * @param FTF_FollowRequest $queueRequest Request from UI.
+     * @param FTF_Request_Base $queueRequest Request from UI.
      */
-    public function FTF_Queue($queueRequest)
+    public function FTF_Driver_Queue($queueRequest)
     {
         parent::__construct($queueRequest->twitterUsername);
         $this->queueRequest = $queueRequest;
     }
 
+    /**
+     * Takes userIds from FTF_Request_QueueAdd and pushes into our queue.
+     */
+    public function pushUserIdsToQueue()
+    {
+        if (!($this->queueRequest instanceof FTF_Request_QueueAdd))
+        {
+            trigger_error("Invalid request passed for addUserIdsToQueue.", E_USER_ERROR);
+        }
+
+        $this->userData = new FTF_UserData($this->queueRequest->twitterUsername);
+        $this->userData->mergeInUserIdsToQueue($this->queueRequest->queuedUserIds);
+        $this->userData->flushPrimaryUserData();
+    }
+
+    /**
+     * Generates and returns our HTML for all users in the queue.
+     * @return string html.
+     */
+    public function generateHtmlForQueue()
+    {
+        $users = $this->userData->fetchCachedUsers($this->userData->queuedUserIds);
+
+        $html = $this->generateUserTablesHtml($users, 'followPage');
+        return $html;
+    }
 
 
 }

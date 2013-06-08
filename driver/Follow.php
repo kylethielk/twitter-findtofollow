@@ -21,26 +21,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-require_once('TwitterDriver.php');
+require_once(dirname(__FILE__) . '/Twitter.php');
 
 /**
  * Controls the flow of following users.
  *
- * Class FTF_Follow
+ * Class FTF_Driver_Follow
  */
-class FTF_Follow extends FTF_TwitterDriver
+class FTF_Driver_Follow extends FTF_Driver_Twitter
 {
     /**
-     * @var FTF_FollowRequest
+     * @var FTF_Request_Follow
      */
     private $followRequest;
 
 
     /**
      * @param Array $apiKeys Our Twitter API Keys.
-     * @param FTF_FollowRequest $followRequest Request from UI.
+     * @param FTF_Request_Follow $followRequest Request from UI.
      */
-    public function FTF_Follow($apiKeys, $followRequest)
+    public function FTF_Driver_Follow($apiKeys, $followRequest)
     {
         parent::__construct($apiKeys, $followRequest->twitterUsername);
         $this->followRequest = $followRequest;

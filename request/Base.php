@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Author: Kyle Thielk (www.kylethielk.com)
  * License:
@@ -22,11 +23,33 @@
  * THE SOFTWARE.
  */
 
-require_once(dirname(__FILE__) . '/lib/timer.php');
-require_once(dirname(__FILE__) . '/lib/TwitterAPIExchange.php');
-require_once(dirname(__FILE__) . '/config.php');
-require_once(dirname(__FILE__) . '/Web.php');
+/**
+ * The base request object that all request objects must extend from.
+ * Class FTF_Request_Base
+ */
+class FTF_Request_Base
+{
 
-FTF_Web::executeRequest($_POST);
+    /**
+     * Username for person running this app.
+     * @var String
+     */
+    public $twitterUsername;
+
+    /**
+     * Validate all required fields are set.
+     * @return Boolean True if valid, false otherwise.
+     */
+    public function validate()
+    {
+        //Required fields
+        if (!isset($this->twitterUsername))
+        {
+            return false;
+        }
+        return true;
+
+    }
+}
 
 ?>

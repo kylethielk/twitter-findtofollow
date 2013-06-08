@@ -23,29 +23,24 @@
  * THE SOFTWARE.
  */
 
+require_once(dirname(__FILE__) . '/Base.php');
 /**
- * The object form of the json we will receive from the front-end.
- * Class FTF_WebRequest
+ * The object form of the json we will receive from the front-end when fetching the queue.
+ * Class FTF_Request_QueueFetch
  */
-class FTF_FollowRequest
+class FTF_Request_QueueFetch extends FTF_Request_Base
 {
-
     /**
-     * @var String Username of person we are running application for.
+     * Username for person running this app.
+     * @var String
      */
     public $twitterUsername;
-
-    /**
-     * Userid for person we want to follow.
-     * @var number
-     */
-    public $toFollowUserId;
 
     /**
      * Construct from json object received from front-end.
      * @param $ajaxData Object.
      */
-    public function FTF_FollowRequest($ajaxData)
+    public function FTF_Request_QueueFetch($ajaxData)
     {
         foreach ($this as $key => $value)
         {
@@ -55,21 +50,6 @@ class FTF_FollowRequest
 
             }
         }
-
-    }
-
-    /**
-     * Validate all required fields are set.
-     * @return Boolean True if valid, false otherwise.
-     */
-    public function validate()
-    {
-        //Required fields
-        if (!isset($this->toFollowUserId) || !is_numeric($this->toFollowUserId) || $this->toFollowUserId < 0 || !isset($this->twitterUsername))
-        {
-            return false;
-        }
-        return true;
 
     }
 }

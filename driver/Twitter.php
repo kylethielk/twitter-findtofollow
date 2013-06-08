@@ -21,14 +21,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-require_once('UserData.php');
-require_once("Driver.php");
+require_once(dirname(__FILE__) . '/Base.php');
 
 /**
  * Parent class for all of our driver classes that interact with the Twitter API.
- * Class FTF_TwitterDriver
+ * Class FTF_Driver_Twitter
  */
-class FTF_TwitterDriver extends FTF_Driver
+class FTF_Driver_Twitter extends FTF_Driver_Base
 {
     /**
      * @var array Associative Array of Twitter OAuth Keys.

@@ -23,12 +23,15 @@
  * THE SOFTWARE.
  */
 
+require_once(dirname(__FILE__) . '/Base.php');
 /**
- * The object form of the json we will receive from the front-end when adding users to the queue.
- * Class FTF_QueueRequest
+ * The object form of the json we will receive from the front-end.
+ * Class FTF_Request_Filter
  */
-class FTF_QueueAddRequest extends FTF_QueueRequest
+class FTF_Request_Filter extends FTF_Request_Base
 {
+    const FRIENDS_GREATER_THAN_FOLLOWERS = 'friendsGreaterThanFollowers';
+    const FOLLOWERS_GREATER_THAN_FRIENDS = 'followersGreaterThanFriends';
 
     /**
      * Username for person running this app.
@@ -36,16 +39,55 @@ class FTF_QueueAddRequest extends FTF_QueueRequest
      */
     public $twitterUsername;
     /**
-     * Array of UserIds to add to queue.
-     * @var array user ids.
+     * We build our list of potential people to follow based one person's list of followers. This is their username.
+     * @var String
      */
-    public $queuedUserIds;
+    public $sourceUsername;
+    /**
+     * The maximum number of followers to fetch from sourceUsername.
+     * @var Integer
+     */
+    public $followerLimit;
+    /**
+     * Minimum number of followers a potential user must have.
+     * Optional.
+     * @var Integer
+     */
+    public $minimumFollowers;
+    /**
+     * Maximum number of followers a potential user must have.
+     * Optional.
+     * @var Integer
+     */
+    public $maximumFollowers;
+    /**
+     * Minimum number of friends a potential user must have.
+     * Optional.
+     * @var Integer
+     */
+    public $minimumFriends;
+    /**
+     * Maximum number of friends a potential user must have.
+     * Optional.
+     * @var Integer
+     */
+    public $maximumFriends;
+    /**
+     * Whether potential user should have more friends than followers, visa versa or don't care.
+     * @var
+     */
+    public $friendToFollowerRatio;
+    /**
+     * Comma separated list of keywords that must be in description of user. Only one has to match, not all.
+     * @var
+     */
+    public $keywords;
 
     /**
      * Construct from json object received from front-end.
      * @param $ajaxData Object.
      */
-    public function FTF_QueueAddRequest($ajaxData)
+    public function FTF_Request_Filter($ajaxData)
     {
         foreach ($this as $key => $value)
         {
@@ -65,7 +107,7 @@ class FTF_QueueAddRequest extends FTF_QueueRequest
     public function validate()
     {
         //Required fields
-        if (!isset($this->twitterUsername) || !isset($this->queuedUserIds) || count($this->queuedUserIds) < 1)
+        if (!parent::validate() || !isset($this->sourceUsername) || !isset($this->followerLimit) || !is_numeric($this->followerLimit))
         {
             return false;
         }

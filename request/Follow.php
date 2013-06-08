@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Author: Kyle Thielk (www.kylethielk.com)
  * License:
@@ -21,60 +22,56 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-require_once('UserData.php');
-
+require_once(dirname(__FILE__) . '/Base.php');
 /**
- * Parent class for all of our driver classes.
- * Class FTF_TwitterDriver
+ * The object form of the json we will receive from the front-end.
+ * Class FTF_Request_Follow
  */
-class FTF_Driver
+class FTF_Request_Follow extends FTF_Request_Base
 {
 
     /**
-     * @var string
+     * @var String Username of person we are running application for.
      */
-    protected $twitterUsername;
+    public $twitterUsername;
 
     /**
-     * @var FTF_UserData
+     * Userid for person we want to follow.
+     * @var number
      */
-    protected $userData;
-    /**
-     * @var array Log Messages.
-     */
-    private $logArray = array();
+    public $toFollowUserId;
 
     /**
-     * Initialize this driver.
-     * @param string $twitterUsername The username for who we are running this app for.
+     * Construct from json object received from front-end.
+     * @param $ajaxData Object.
      */
-    public function __construct($twitterUsername)
+    public function FTF_Request_Follow($ajaxData)
     {
-        $this->twitterUsername = $twitterUsername;
-        $this->userData = new FTF_UserData($twitterUsername);
-    }
-
-
-    /**
-     * Generates a string of all log entries.
-     * @return string Log String.
-     */
-    public function generateLog()
-    {
-        $message = '';
-        foreach ($this->logArray as $log)
+        foreach ($this as $key => $value)
         {
-            $message .= $log;
+            if (isset($ajaxData[$key]))
+            {
+                $this->$key = $ajaxData[$key];
+
+            }
         }
-        return $message;
+
     }
 
     /**
-     * Add a message to the log.
-     * @param $message String The message to add to the log.
+     * Validate all required fields are set.
+     * @return Boolean True if valid, false otherwise.
      */
-    public function addLogMessage($message)
+    public function validate()
     {
-        $this->logArray[] = $message . '<br />';
+        //Required fields
+        if (!isset($this->toFollowUserId) || !is_numeric($this->toFollowUserId) || $this->toFollowUserId < 0 || !parent::validate())
+        {
+            return false;
+        }
+        return true;
+
     }
 }
+
+?>

@@ -23,12 +23,13 @@
  * THE SOFTWARE.
  */
 
-require_once('QueueAddRequest.php');
-require_once('FilterRequest.php');
-require_once('FollowRequest.php');
-require_once('WebResponse.php');
-require_once('Filter.php');
-require_once('Follow.php');
+require_once(dirname(__FILE__) . '/request/QueueAdd.php');
+require_once(dirname(__FILE__) . '/request/Filter.php');
+require_once(dirname(__FILE__) . '/request/Follow.php');
+require_once(dirname(__FILE__) . '/WebResponse.php');
+require_once(dirname(__FILE__) . '/driver/Filter.php');
+require_once(dirname(__FILE__) . '/driver/Follow.php');
+require_once(dirname(__FILE__) . '/driver/Queue.php');
 
 /**
  * Executes AJAX requests from html file.
@@ -42,13 +43,13 @@ class FTF_Web
     const ACTION_FETCH_QUEUE = 'fetchqueue';
 
     /**
-     * @var FTF_Filter
+     * @var FTF_Driver_Base
      */
     static public $currentDriver = null;
 
     /**
      * Execute the ajax request.
-     * @param Array $data $_POST data.
+     * @param object $data $_POST data.
      */
     public static function executeRequest($data)
     {
@@ -78,45 +79,42 @@ class FTF_Web
 
     public static function fetchQueue($data)
     {
-        $request = new FTF_QueueAddRequest($data);
+        $request = new FTF_Request_QueueFetch($data);
 
         if (!isset($request) || !$request->validate())
         {
             FTF_Web::writeErrorResponse('Queue Request invalid or not supplied.' . print_r($request, true));
         }
 
-        $userData = new FTF_UserData($request->twitterUsername);
-        $userData->mergeInUserIdsToQueue($request->queuedUserIds);
-        $userData->flushPrimaryUserData();
+        $queue = new FTF_Driver_Queue($request);
 
-        FTF_Web::writeValidResponse("", "");
+        FTF_Web::writeValidResponse($queue->generateHtmlForQueue(), "");
     }
 
     public static function addToQueue($data)
     {
-        $request = new FTF_QueueAddRequest($data);
+        $request = new FTF_Request_QueueAdd($data);
 
         if (!isset($request) || !$request->validate())
         {
             FTF_Web::writeErrorResponse('Queue Request invalid or not supplied.' . print_r($request, true));
         }
 
-        $userData = new FTF_UserData($request->twitterUsername);
-        $userData->mergeInUserIdsToQueue($request->queuedUserIds);
-        $userData->flushPrimaryUserData();
+        $queue = new FTF_Driver_Queue($request);
+        $queue->pushUserIdsToQueue();
 
         FTF_Web::writeValidResponse("", "");
     }
 
     /**
      * Executes the web request to follow an user.
-     * @param Array $data $_POST data.
+     * @param object $data $_POST data.
      */
     private static function followUser($data)
     {
         global $apiKeys;
 
-        $request = new FTF_FollowRequest($data);
+        $request = new FTF_Request_Follow($data);
 
         if (!isset($request) || !$request->validate())
         {
@@ -124,7 +122,7 @@ class FTF_Web
         }
 
 
-        $follow = new FTF_Follow($apiKeys, $request);
+        $follow = new FTF_Driver_Follow($apiKeys, $request);
         FTF_Web::$currentDriver = $follow;
 
         $follow->followUser();
@@ -132,13 +130,13 @@ class FTF_Web
 
     /**
      * Start the process and find filtered users to follow.
-     * @param Array $data $_POST data.
+     * @param object $data $_POST data.
      */
     private static function filterFollowers($data)
     {
         global $apiKeys;
 
-        $settings = new FTF_FilterRequest($data);
+        $settings = new FTF_Request_Filter($data);
 
         if (!isset($settings) || !$settings->validate())
         {
@@ -146,7 +144,7 @@ class FTF_Web
         }
         else
         {
-            $findToFollow = new FTF_Filter($apiKeys, $settings);
+            $findToFollow = new FTF_Driver_Filter($apiKeys, $settings);
 
             FTF_Web::$currentDriver = $findToFollow;
 

@@ -22,12 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
+require_once(dirname(__FILE__) . '/Base.php');
 /**
- * The object form of the json we will receive from the front-end when fetching the queue.
- * Class FTF_QueueFetchRequest
+ * The object form of the json we will receive from the front-end when adding users to the queue.
+ * Class FTF_Request_QueueAdd
  */
-class FTF_QueueFetchRequest extends FTF_QueueRequest
+class FTF_Request_QueueAdd extends FTF_Request_Base
 {
 
     /**
@@ -35,12 +35,17 @@ class FTF_QueueFetchRequest extends FTF_QueueRequest
      * @var String
      */
     public $twitterUsername;
+    /**
+     * Array of UserIds to add to queue.
+     * @var array user ids.
+     */
+    public $queuedUserIds;
 
     /**
      * Construct from json object received from front-end.
      * @param $ajaxData Object.
      */
-    public function FTF_QueueFetchRequest($ajaxData)
+    public function FTF_Request_QueueAdd($ajaxData)
     {
         foreach ($this as $key => $value)
         {
@@ -60,7 +65,7 @@ class FTF_QueueFetchRequest extends FTF_QueueRequest
     public function validate()
     {
         //Required fields
-        if (!isset($this->twitterUsername))
+        if (!parent::validate() || !isset($this->queuedUserIds) || count($this->queuedUserIds) < 1)
         {
             return false;
         }

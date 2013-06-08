@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-require_once('TwitterDriver.php');
+require_once(dirname(__FILE__) . '/Twitter.php');
 /**
  * Controls the flow of the application. General execution:
  *
@@ -29,13 +29,13 @@ require_once('TwitterDriver.php');
  * buildFollowerIds();
  * buildFilteredFollowers();
  *
- * Class FTF_Filter
+ * Class FTF_Driver_Filter
  */
-class FTF_Filter extends FTF_TwitterDriver
+class FTF_Driver_Filter extends FTF_Driver_Twitter
 {
 
     /**
-     * @var FTF_FilterRequest
+     * @var FTF_Request_Filter
      */
     private $filterRequest;
     /**
@@ -53,7 +53,7 @@ class FTF_Filter extends FTF_TwitterDriver
 
     /**
      * @param array $apiKeys Our twitter api keys.
-     * @param FTF_FilterRequest $filterRequest .
+     * @param FTF_Request_Filter $filterRequest .
      */
     public function __construct($apiKeys, $filterRequest)
     {
@@ -153,7 +153,7 @@ class FTF_Filter extends FTF_TwitterDriver
 
     /**
      * Once buildFriendIds and buildFollowerIds have been called, call this function
-     * to filter the results. FTF_Filter->filteredUsers will hold the results.
+     * to filter the results. FTF_Driver_Filter->filteredUsers will hold the results.
      */
     public function buildFilteredFollowers()
     {
@@ -223,33 +223,7 @@ class FTF_Filter extends FTF_TwitterDriver
         $counter = 1;
 
 
-        foreach ($this->filteredUsers as $user)
-        {
-            $html = $html . '<table width="500" class="user-table" id="filterPageUserRow' . $user->id . '" onclick="FindToFollow.userTableRowClicked(event);">
-                <tr>
-                <td valign="top" class="number-td">
-                    ' . $counter . '.
-                </td>
-                <td valign="middle" class="picture-td">
-                    <img src="' . $user->profile_image_url . '" />
-                </td>
-                <td valign="middle" class="description-td">
-                    <a href="http://www.twitter.com/' . $user->screen_name . '" target="_blank">' . $user->name . ' (@<span id="username' . $user->id . '">' . $user->screen_name . '</span>)</a><br />
-                    <p>' . $user->description . '</p>
-                    Friends/Following : <strong>' . $user->friends_count . '</strong> &nbsp;&nbsp;&nbsp;&nbsp; Followers: <strong>' . $user->followers_count . '</strong>
-                </td>
-                <td class="checkbox-td">
-                    <input type="checkbox" name="checked" id="checked" value="' . $user->id . '" class="row-checkbox" />
-                </td>
-                </tr>
-                </table>';
-            $counter++;
-        }
-
-        if (count($this->filteredUsers) < 1)
-        {
-            $html = 'No Results Found!';
-        }
+        $html = $html . $this->generateUserTablesHtml($this->filteredUsers, 'filterPage');
         return $html;
     }
 
@@ -288,11 +262,11 @@ class FTF_Filter extends FTF_TwitterDriver
             {
                 $addUser = false;
             }
-            if ($addUser && $this->filterRequest->friendToFollowerRatio == FTF_FilterRequest::FOLLOWERS_GREATER_THAN_FRIENDS && $user->followers_count < $user->friends_count)
+            if ($addUser && $this->filterRequest->friendToFollowerRatio == FTF_Request_Filter::FOLLOWERS_GREATER_THAN_FRIENDS && $user->followers_count < $user->friends_count)
             {
                 $addUser = false;
             }
-            if ($addUser && $this->filterRequest->friendToFollowerRatio == FTF_FilterRequest::FRIENDS_GREATER_THAN_FOLLOWERS && $user->followers_count > $user->friends_count)
+            if ($addUser && $this->filterRequest->friendToFollowerRatio == FTF_Request_Filter::FRIENDS_GREATER_THAN_FOLLOWERS && $user->followers_count > $user->friends_count)
             {
                 $addUser = false;
             }

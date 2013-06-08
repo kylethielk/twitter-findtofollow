@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-require_once 'Friend.php';
+require_once(dirname(__FILE__) . '/Friend.php');
 
 /**
  * Class with functions to write/read from our cached data.
