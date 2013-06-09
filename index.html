@@ -23,40 +23,30 @@
         <div class="leftColumn">
             <div class="content-block">
                 <input type="button" value="Start Following Users" id="followUsersBtn"
-                       onclick="FindToFollow.Filter.sendFilterRequest();return false;"
+                       onclick="FindToFollow.Follow.startAutomaticFollowing();return false;"
                        class="blue-button"/>
 
                 <h2>Required Fields</h2>
-                <label for="followIntervalTimeMinimum">Min Time (s):</label>
+                <label for="followIntervalTimeMinimum">Min Time (s) For Follow:</label>
                 <input type="text" id="followIntervalTimeMinimum" name="followIntervalTimeMinimum"
                        title="The amount of time between each follow."
                        value="60"/>
-                <label for="followIntervalTimeMaximum">Max Time (s):</label>
+                <label for="followIntervalTimeMaximum">Max Time (s) For Follow:</label>
                 <input type="text" id="followIntervalTimeMaximum" name="followIntervalTimeMaximum"
                        title="The amount of time between each follow."
                        value="180"/>
+                <label for="followMaximum">Max People to Follow:</label>
+                <input type="text" id="followMaximum" name="followMaximum"
+                       title="Amount of people to process this round."
+                       value="25"/>
 
             </div>
         </div>
         <div class="rightColumn">
             <div class="content-block" style="min-height: 709px">
-
-                <div id="followStatus">
-
-                    <p>We have followed <span id="currentFollowingNumber">0</span> out of <span
-                            id="totalFollowingNumber">0</span>
-                        users.</p>
-
-                    <p>Next follow in <span id="nextFollowTime">0</span> seconds.</p>
-
-                    <p id="currentFollowStatus"></p>
-
-                    <img id="followLoadingImage" src="./images/ajax-loader.gif" style="display:none"/>
-
-                    <input type="button" id="closePopupBtn" style="display:none" value="Close Window"
-                           onclick="FindToFollow.closeFollowPopup();"/>
-                </div>
-
+                <input type="button" value="Refresh Queue" id="refreshQueueBtn"
+                       onclick="FindToFollow.Follow.refreshQueue();return false;"
+                       class="blue-button"/>
                 <br/>
 
                 <div id="followResults">
@@ -77,14 +67,14 @@
                 <h2>Required Fields</h2>
                 <label for="twitterUsername">Your Twitter Username:</label>
                 <input type="text" id="twitterUsername" placeholder="kylethielk" title="Your username on twitter."
-                       class="medium-input" value="kylethielk"/>
+                       class="medium-input" value=""/>
                 <label for="sourceUsername">Follower Source Username:</label>
                 <input type="text" id="sourceUsername" placeholder="patio11"
                        title="Username of person whose follower list we will pull users from." class="medium-input"
-                       value="patio11"/>
-                <label for="followerLimit">Max Follower Count:</label>
+                       value=""/>
+                <label for="followerLimit">Max Followers to Pull:</label>
                 <input type="text" id="followerLimit" title="Maximum number of followers to pull."
-                       class="medium-input" placeholder="200" value="10"/>
+                       class="medium-input" placeholder="200" value="250"/>
 
                 <h2>Filter Followers</h2>
 
@@ -118,7 +108,8 @@
                 <img id="filterLoadingImage" src="./images/ajax-loader.gif" style="display: none"/>
 
                 <div id="logContainer" style="display: none">
-                    <a href="javascript:void(0);" id="logVisibilityLink" onclick="FindToFollow.toggleLogVisibility()">Show
+                    <a href="javascript:void(0);" id="logVisibilityLink"
+                       onclick="FindToFollow.Filter.toggleLogVisibility()">Show
                         Log</a>
 
                     <div id="logText"></div>
@@ -186,30 +177,6 @@
     </div>
 </div>
 
-<div id="dialogBackground" style="display: none">
-    <div id="dialogContent">
-
-        <h1>Follow Interval Settings</h1>
-
-        <p>Rather than following all in one blast, we will spread out the follows to hopefully avoid Twitter's Spam
-            filters. Using a range and randomly choosing a value in between for each time also helps.</p>
-
-        <div id="followSettings">
-            <label for="followIntervalTimeMinimum">Min Time (s):</label>
-            <input type="text" id="followIntervalTimeMinimum" name="followIntervalTimeMinimum"
-                   title="The amount of time between each follow."
-                   value="300"/>
-            <label for="followIntervalTimeMaximum">Max Time (s):</label>
-            <input type="text" id="followIntervalTimeMaximum" name="followIntervalTimeMaximum"
-                   title="The amount of time between each follow."
-                   value="600"/>
-            <input type="button" id="startFollowingBtn" onclick="FindToFollow.startAutomaticFollowing();"
-                   value="Start Following" class="blue-button"/>
-        </div>
-
-
-    </div>
-</div>
 
 </body>
 </html>

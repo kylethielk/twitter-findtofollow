@@ -74,11 +74,6 @@ div {
     border-top-left-radius: 5px;
 }
 
-#dialogContent input[type="text"] {
-    margin: 10px 13px 0 5px;
-    width: 45px;
-}
-
 .leftColumn input,
 .leftColumn select {
     margin: 10px 0 0 12px;
@@ -219,6 +214,7 @@ input {
 
 .user-table img {
     border-radius: 6px;
+    max-width: 50px;
 }
 
 #loadingImage {
@@ -238,31 +234,6 @@ input {
     position: absolute;
     right: 0;
     top: 0;
-}
-
-#dialogBackground {
-    background: rgba(0, 0, 0, 0.7);
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    margin: -8px;
-    z-index: 100;
-}
-
-#dialogContent {
-    background: #fff;
-    border-radius: 6px;
-    box-shadow: 1px 1px 6px rgba(154, 154, 154, 0.6);
-    border: 1px solid #ccc;
-    width: 482px;
-    height: 300px;
-    top: 10%;
-    left: 50%;
-    margin-left: -241px;
-    position: fixed;
-    padding: 15px;
 }
 
 #filterResults {
@@ -309,6 +280,12 @@ input {
     z-index: 5;
 }
 
+.disabled-button {
+    background: rgb(204, 204, 204) !important;
+    border: none !important;
+    cursor: default !important;
+}
+
 .blue-button {
     -moz-box-shadow: inset 0px 1px 0px 0px #cae3fc;
     -webkit-box-shadow: inset 0px 1px 0px 0px #cae3fc;
@@ -347,12 +324,24 @@ input {
 .error-message {
     color: red;
 }
+
 #errorBar {
     height: auto;
     padding: 1px;
-    width:100%;
+    width: 100%;
     background-color: #ffdadd;
     color: rgb(199, 0, 0);
     text-align: center;
     margin: 0;
+}
+#refreshQueueBtn {
+    position: absolute;
+    top: 32px;
+    right: 8px;
+}
+#followResults {
+    margin-top: 40px;
+}
+#followResults h1 {
+    margin-top: -30px;
 }

@@ -24,6 +24,7 @@
  */
 
 require_once(dirname(__FILE__) . '/request/QueueAdd.php');
+require_once(dirname(__FILE__) . '/request/QueueFetch.php');
 require_once(dirname(__FILE__) . '/request/Filter.php');
 require_once(dirname(__FILE__) . '/request/Follow.php');
 require_once(dirname(__FILE__) . '/WebResponse.php');
@@ -49,7 +50,7 @@ class FTF_Web
 
     /**
      * Execute the ajax request.
-     * @param object $data $_POST data.
+     * @param array $data $_POST data.
      */
     public static function executeRequest($data)
     {
@@ -77,6 +78,10 @@ class FTF_Web
         }
     }
 
+    /**
+     * Process request to fetch queue.
+     * @param array $data $_POST
+     */
     public static function fetchQueue($data)
     {
         $request = new FTF_Request_QueueFetch($data);
@@ -91,6 +96,10 @@ class FTF_Web
         FTF_Web::writeValidResponse($queue->generateHtmlForQueue(), "");
     }
 
+    /**
+     * Process request to add users to queue.
+     * @param array $data $_POST
+     */
     public static function addToQueue($data)
     {
         $request = new FTF_Request_QueueAdd($data);
@@ -108,7 +117,7 @@ class FTF_Web
 
     /**
      * Executes the web request to follow an user.
-     * @param object $data $_POST data.
+     * @param array $data $_POST data.
      */
     private static function followUser($data)
     {
@@ -130,7 +139,7 @@ class FTF_Web
 
     /**
      * Start the process and find filtered users to follow.
-     * @param object $data $_POST data.
+     * @param array $data $_POST data.
      */
     private static function filterFollowers($data)
     {

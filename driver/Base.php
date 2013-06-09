@@ -81,15 +81,22 @@ class FTF_Driver_Base
      * Generates the HTML for the supplied users.
      * @param array $users Twitter user data array.
      * @param string $pageId The id of the page this table will be in.
+     * @param boolean $disableSelect Defaults to false, set to true to disable clicking of the row.
      * @return string The HTML.
      */
-    public function generateUserTablesHtml($users, $pageId)
+    public function generateUserTablesHtml($users, $pageId, $disableSelect = false)
     {
         $counter = 1;
         $html = '';
         foreach ($users as $user)
         {
-            $html = $html . '<table width="500" class="user-table" id="' . $pageId . 'UserRow' . $user->id . '" onclick="FindToFollow.userTableRowClicked(event);">
+            $onClick = '';
+            if (!$disableSelect)
+            {
+                $onClick = 'onclick="FindToFollow.userTableRowClicked(event);"';
+            }
+
+            $html = $html . '<table width="500" class="user-table" id="' . $pageId . 'UserRow' . $user->id . '" ' . $onClick . ' data-user-id="' . $user->id . '">
                 <tr>
                 <td valign="top" class="number-td">
                     ' . $counter . '.
@@ -98,15 +105,21 @@ class FTF_Driver_Base
                     <img src="' . $user->profile_image_url . '" />
                 </td>
                 <td valign="middle" class="description-td">
-                    <a href="http://www.twitter.com/' . $user->screen_name . '" target="_blank">' . $user->name . ' (@<span id="username' . $user->id . '">' . $user->screen_name . '</span>)</a><br />
+                    <a href="http://www.twitter.com/' . $user->screen_name . '" target="_blank">' . $user->name . ' (@<span id="' . $pageId . 'Username' . $user->id . '">' . $user->screen_name . '</span>)</a><br />
                     <p>' . $user->description . '</p>
                     Friends/Following : <strong>' . $user->friends_count . '</strong> &nbsp;&nbsp;&nbsp;&nbsp; Followers: <strong>' . $user->followers_count . '</strong>
-                </td>
-                <td class="checkbox-td">
+                </td>';
+
+            if (!$disableSelect)
+            {
+                $html .= '<td class="checkbox-td">
                     <input type="checkbox" name="checked" id="checked" value="' . $user->id . '" class="row-checkbox" />
-                </td>
-                </tr>
-                </table>';
+                </td>';
+            }
+
+
+            $html .= '</tr >
+                </table > ';
             $counter++;
         }
 

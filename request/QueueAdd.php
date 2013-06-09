@@ -43,7 +43,7 @@ class FTF_Request_QueueAdd extends FTF_Request_Base
 
     /**
      * Construct from json object received from front-end.
-     * @param $ajaxData Object.
+     * @param array $ajaxData POST_DATA.
      */
     public function FTF_Request_QueueAdd($ajaxData)
     {

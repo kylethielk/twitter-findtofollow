@@ -138,6 +138,19 @@ class FTF_UserData
     }
 
     /**
+     * Removes the userid from our list of queued users. Remember to call flushPrimaryUserData to persist to file system.
+     * @param number $userId The userid to remove.
+     */
+    public function removeUserIdFromQueue($userId)
+    {
+        if(!isset($userId))
+        {
+            return;
+        }
+        $this->queuedUserIds = array_diff($this->queuedUserIds, array($userId));
+
+    }
+    /**
      * Add a list of userIds to our queue. Be sure to call flushPrimaryUserData to persist
      * to filesystem.
      * @param array $userIds

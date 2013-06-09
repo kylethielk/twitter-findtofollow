@@ -43,7 +43,7 @@ class FTF_Request_Follow extends FTF_Request_Base
 
     /**
      * Construct from json object received from front-end.
-     * @param $ajaxData Object.
+     * @param array $ajaxData $_POST data.
      */
     public function FTF_Request_Follow($ajaxData)
     {

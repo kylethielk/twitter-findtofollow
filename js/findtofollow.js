@@ -3,6 +3,9 @@
  */
 var FindToFollow = new function()
 {
+    /**
+     * Methods called and utilized by the follow page.
+     */
     this.Filter = new function()
     {
         /**
@@ -61,7 +64,7 @@ var FindToFollow = new function()
 
             var requestObject = this.buildFilterRequestObject();
 
-            $("#sendRequestBtn").attr("disabled", "disabled");
+            FindToFollow.disableButton("sendRequestBtn");
 
             if (this.validateFilterRequest(requestObject))
             {
@@ -79,6 +82,7 @@ var FindToFollow = new function()
                         $("#logContainer").show();
                         //Set log text.
                         $("#logText").html(response.log);
+
                         //Default to minimized
                         _this.minimizeLog();
 
@@ -100,16 +104,19 @@ var FindToFollow = new function()
                     })
                     .always(function()
                     {
-                        $("#sendRequestBtn").removeAttr("disabled");
+                        FindToFollow.enableButton("sendRequestBtn");
                         $("#filterLoadingImage").hide();
                         _this.unObscureResults();
                     });
             }
             else
             {
-                $("#sendRequestBtn").removeAttr("disabled");
+                FindToFollow.enableButton("sendRequestBtn");
             }
         };
+        /**
+         * Added selected users to our queue. Called by button on UI.
+         */
         this.addSelectedUsersToQueue = function()
         {
             var idsToQueue = $("#filterPage input.row-checkbox:checked").map(function()
@@ -120,7 +127,7 @@ var FindToFollow = new function()
             //Make sure we have atleast one item selected
             if (idsToQueue.length < 1)
             {
-                alert("You must select at least one person to add to queue.");
+                FindToFollow.showErrorMessage("You must select at least one person to add to queue.");
                 return;
             }
 
@@ -128,7 +135,6 @@ var FindToFollow = new function()
             requestObject.queuedUserIds = idsToQueue;
             requestObject.twitterUsername = $("#twitterUsername").val();
 
-            var _this = this;
             $.post("FindToFollow.php", requestObject)
                 .done(function(response)
                 {
@@ -136,7 +142,7 @@ var FindToFollow = new function()
 
                     if (response.hasError)
                     {
-                        _this.showErrorMessage("Error: " + response.errorMessage);
+                        FindToFollow.showErrorMessage("Error: " + response.errorMessage);
                     }
                     else
                     {
@@ -147,14 +153,16 @@ var FindToFollow = new function()
                             $("#filterPageUserRow" + id).fadeOut(400, function()
                             {
                                 $(this).remove();
-                                _this.updateSelectedCount();
+                                FindToFollow.updateSelectedCount();
                             });
                         }
+
+                        FindToFollow.Follow.refreshQueue();
                     }
                 })
                 .fail(function()
                 {
-                    _this.showErrorMessage("Unexpected error when adding users to queue.");
+                    FindToFollow.showErrorMessage("Unexpected error when adding users to queue.");
                 });
 
 
@@ -240,47 +248,319 @@ var FindToFollow = new function()
                 checkedValue = false;
             }
 
-            $(".row-checkbox").each(function()
+            $("#filterPage .row-checkbox").each(function()
             {
                 FindToFollow.setRowSelectedState($(this).val(), $(this), checkedValue);
             });
 
-            this.updateSelectedCount();
+            FindToFollow.updateSelectedCount();
 
         };
 
         return this;
     };
     /**
-     * The minimum time between follows.
-     * @type {number}
+     * All methods utilized by Follow Page.
      */
-    this.followIntervalTimeMinimum = -1;
+    this.Follow = new function()
+    {
+        /**
+         * The minimum time between follows.
+         * @type {number}
+         */
+        this.followIntervalTimeMinimum = -1;
+        /**
+         * The maximum time between follows.
+         * @type {number}
+         */
+        this.followIntervalTimeMaximum = -1;
+        /**
+         * The amount of time in ms between each follow.
+         * @type {number}
+         */
+        this.followIntervalTime = 0;
+        /**
+         * The interval # returned from setInterval.
+         * @type {null}
+         */
+        this.followInterval = null;
+        /**
+         * Array of ids to start following.
+         * @type {Array}
+         */
+        this.idsToFollow = [];
+        /**
+         * Keeps track of how many ticks of the interval we have had. This allows us to have a countdown timer.
+         * @type {number}
+         */
+        this.followTicks = 0;
+        /**
+         * A boolean flag that when set to true indicates we are in the middle of processing the queue.
+         * @type {boolean}
+         */
+        this.processingQueue = false;
+
+        /**
+         * Obscure the results, just a nice UI effect for when we are refreshing the results.
+         */
+        this.obscureResults = function()
+        {
+            $("#followResults").fadeTo(200, 0.2);
+        };
+        /**
+         * Fades back to full opacity once results have been refreshed.
+         */
+        this.unObscureResults = function()
+        {
+            $("#followResults").fadeTo(250, 1);
+        };
+        /**
+         * Refreshes the screen with all users in queue.
+         */
+        this.refreshQueue = function()
+        {
+            if (FindToFollow.Follow.processingQueue)
+            {
+                return;
+            }
+
+            //When running locally the reresh can happen so fast we don't even notice,
+            //do a little animating to indicate refresh actually happened
+            FindToFollow.Follow.obscureResults();
+
+            var requestObject = new FindToFollow.FetchQueueJsonRequest();
+            requestObject.twitterUsername = $("#twitterUsername").val();
+
+            $.post("FindToFollow.php", requestObject)
+                .done(function(response)
+                {
+
+                    response = JSON.parse(response);
+                    FindToFollow.Follow.unObscureResults();
+
+                    if (response.hasError)
+                    {
+                        FindToFollow.showErrorMessage("Error fetching current queue.");
+                    }
+                    else
+                    {
+                        $("#followResults").html(response.html);
+                    }
+                })
+                .fail(function()
+                {
+                    FindToFollow.showErrorMessage("An unexpected error occurred during the request.");
+                });
+        };
+        /**
+         * Called by button on UI. Starts processing the queue with settings supplied on the UI.
+         */
+        this.startAutomaticFollowing = function()
+        {
+            this.followIntervalTimeMinimum = parseInt($("#followIntervalTimeMinimum").val());
+            this.followIntervalTimeMaximum = parseInt($("#followIntervalTimeMaximum").val());
+            var followMaximum = parseInt($("#followMaximum").val());
+
+            if (!$.isNumeric(this.followIntervalTimeMinimum))
+            {
+                $("#followIntervalTimeMinimum").addClass("input-error");
+                return;
+            }
+            else
+            {
+                $("#followIntervalTimeMinimum").removeClass("input-error");
+            }
+            if (!$.isNumeric(this.followIntervalTimeMaximum))
+            {
+                $("#followIntervalTimeMaximum").addClass("input-error");
+                return;
+            }
+            else
+            {
+                $("#followIntervalTimeMaximum").removeClass("input-error");
+            }
+            if (!$.isNumeric(followMaximum) || followMaximum < 1)
+            {
+                $("#followMaximum").addClass("input-error");
+                return;
+            }
+            else
+            {
+                $("#followMaximum").removeClass("input-error");
+            }
+
+            if (this.followIntervalTimeMaximum < this.followIntervalTimeMinimum)
+            {
+                $("#followIntervalTimeMinimum").addClass("input-error");
+                $("#followIntervalTimeMaximum").addClass("input-error");
+                return;
+            }
+            else
+            {
+                $("#followIntervalTimeMinimum").removeClass("input-error");
+                $("#followIntervalTimeMaximum").removeClass("input-error");
+            }
+
+
+            //Convert seconds to ms.
+            this.followIntervalTime = this.generateIntervalTime();
+
+
+            //Remove all from visible queue that are past the amount we are following
+            $("#followPage .user-table").each(function(index)
+            {
+                if (index >= followMaximum)
+                {
+                    $(this).remove();
+                }
+            });
+
+            this.idsToFollow = $("#followPage .user-table").map(function()
+            {
+                return $(this).data("user-id");
+
+            }).get();
+
+            FindToFollow.Follow.preFollowSetup();
+
+            //Start by following first user immediately, rather than waiting for first countdown.
+            var firstRowId = "followPageUserRow" + this.idsToFollow[0];
+            this.showCountdownOverlay(firstRowId, 500);
+
+            this.followNextUser();
+
+        };
+        /**
+         * Generates a random interval time between (followIntervalTimeMinimum and followIntervalTimeMaximum) * 1000 to get ms.
+         * @returns {number} The result in ms.
+         */
+        this.generateIntervalTime = function()
+        {
+            var random = Math.floor(Math.random() * (this.followIntervalTimeMaximum - this.followIntervalTimeMinimum + 1)) + this.followIntervalTimeMinimum;
+            return random * 1000;
+        };
+        /**
+         * Shows an overlay over the row that acts as a progress bar getting going from 100% -> 0% width in teh given timeout.
+         * @param {string} rowId The id of the row the overlay will sit on top of.
+         * @param {number} timeout The timeout in ms.
+         */
+        this.showCountdownOverlay = function(rowId, timeout)
+        {
+            var offset = $("#" + rowId).offset();
+            var width = $("#" + rowId).width();
+            var height = $("#" + rowId).height();
+
+            var overlayId = rowId + "Overlay";
+            var div = '<div id="' + overlayId + '" style="margin:0;z-index: 500; height: ' + height + 'px;width: ' + width + 'px;position:absolute; top: ' + offset.top + 'px; left: ' + offset.left + 'px; background-color: rgba(181, 255, 170,0.5);">&nbsp;</div>';
+
+            $("body").append(div);
+            $("#" + overlayId).animate({width: 0}, timeout, "swing", function()
+            {
+                $("#" + overlayId).remove();
+            });
+
+        };
+        /**
+         * Called for each user that is to be followed. Starts countdown, at the end of which it will call
+         * followNextUser.  Relies on followIntervalTime being set and assumes there is another user to follow.
+         */
+        this.startFollowInterval = function()
+        {
+            this.followIntervalTime = this.generateIntervalTime();
+            this.followTicks = 0;
+
+            var nextId = this.idsToFollow[0];
+            var rowId = "followPageUserRow" + nextId;
+
+            this.showCountdownOverlay(rowId, this.followIntervalTime + 1000);
+
+
+            var _this = this;
+            this.followInterval = setInterval(function()
+            {
+                _this.followTicks++;
+
+                if ((_this.followTicks * 1000) >= _this.followIntervalTime)
+                {
+                    //Timer has expired, Follow user.
+                    clearInterval(_this.followInterval);
+                    _this.followNextUser();
+                }
+            }, 1000);
+        };
+        /**
+         * Initializes the UI for automatic following i.e disables buttons and form fields.
+         */
+        this.preFollowSetup = function()
+        {
+            FindToFollow.disableButton("followUsersBtn");
+            FindToFollow.disableButton("refreshQueueBtn");
+
+            FindToFollow.Follow.processingQueue = true;
+        };
+        /**
+         * Re-Enables the UI for automatic following i.e enables buttons and form fields.
+         */
+        this.postFollowTeardown = function()
+        {
+            FindToFollow.enableButton("followUsersBtn");
+            FindToFollow.enableButton("refreshQueueBtn");
+
+            FindToFollow.Follow.processingQueue = false;
+        };
+        /**
+         * Plucks the first element in the idsToFollow array and sends a follow request to Twitter for this user.
+         * On success assuming there are more users to follow still, this method will start a new interval.
+         */
+        this.followNextUser = function()
+        {
+            var nextId = this.idsToFollow.shift();
+            var rowId = "followPageUserRow" + nextId;
+
+            var requestObject = new FindToFollow.FollowJsonRequest();
+            requestObject.toFollowUserId = nextId;
+            requestObject.twitterUsername = $("#twitterUsername").val();
+
+            $.post("FindToFollow.php", requestObject)
+                .done(function(response)
+                {
+                    response = JSON.parse(response);
+
+                    if (response.hasError)
+                    {
+                        FindToFollow.showErrorMessage("Error from twitter. Stopping all follows. [" + response.errorMessage + "]");
+                        FindToFollow.Follow.postFollowTeardown();
+                    }
+                    else
+                    {
+                        //Remove the row from UI
+                        $("#" + rowId).remove();
+
+                        if (FindToFollow.Follow.idsToFollow.length > 0)
+                        {
+                            FindToFollow.Follow.startFollowInterval();
+                        }
+                        else
+                        {
+                            //We have finished following all users.
+                            $("#followResults").html("All items have been processed. Please refresh the queue. If no more items are in the queue please add them.");
+                            FindToFollow.Follow.postFollowTeardown();
+                        }
+                    }
+                })
+                .fail(function()
+                {
+                    FindToFollow.showErrorMessage("An unexpected error occurred during the request.", 60000);
+                    FindToFollow.Follow.postFollowTeardown();
+                });
+
+        };
+    };
+
     /**
-     * The maximum time between follows.
-     * @type {number}
+     * The HTML Id of the current visible page.
+     * @type {string}
      */
-    this.followIntervalTimeMaximum = -1;
-    /**
-     * The amount of time in ms between each follow.
-     * @type {number}
-     */
-    this.followIntervalTime = 0;
-    /**
-     * The interval # returned from setInterval.
-     * @type {null}
-     */
-    this.followInterval = null;
-    /**
-     * Array of ids to start following.
-     * @type {Array}
-     */
-    this.idsToFollow = [];
-    /**
-     * Keeps track of how many ticks of the interval we have had. This allows us to have a countdown timer.
-     * @type {number}
-     */
-    this.followTicks = 0;
     this.currentPageId = "filterPage";
 
     /**
@@ -294,7 +574,7 @@ var FindToFollow = new function()
 
         $("#errorBar").show();
 
-        var messageId = Math.random();
+        var messageId = "message" + Math.floor(Math.random() * 10000);
 
         $("#errorBar").append('<p id="' + messageId + '">' + message + '</p>');
         setTimeout(function()
@@ -314,14 +594,15 @@ var FindToFollow = new function()
     {
         $(".page").each(function()
         {
-            if ($(this).attr('id') == page)
+            if ($(this).attr("id") == page)
             {
                 $("#" + page + "Tab").addClass("tab-selected");
                 $(this).show();
+                FindToFollow.currentPageId = $(this).attr("id");
             }
             else
             {
-                $("#" + $(this).attr('id') + "Tab").removeClass("tab-selected");
+                $("#" + $(this).attr("id") + "Tab").removeClass("tab-selected");
                 $(this).hide();
             }
         })
@@ -375,192 +656,20 @@ var FindToFollow = new function()
         }).get().length;
         $("#" + this.currentPageId + "SelectedCount").html(checkedCount);
     };
-
     /**
-     * Called by Follow Users button. Opens the popup that allows us to start automatic following.
+     * Both disable the button physically and visibly.
      */
-    this.openFollowPopup = function()
+    this.disableButton = function(buttonId)
     {
-        this.idsToFollow = $("input.row-checkbox:checked").map(function()
-        {
-            return this.value
-        }).get();
-
-        //Make sure we have atleast one item selected
-        if (this.idsToFollow.length < 1)
-        {
-            alert("You must select at least one person to follow.");
-            return;
-        }
-
-        //Re-initialize items to starting point.
-        $("#dialogBackground").show();
-        $("#startFollowingBtn").removeAttr("disabled");
-        $("#followLoadingImage").hide();
-        $("#currentFollowStatus").html("");
-        $("#currentFollowStatus").removeClass("error-message");
-        $("#nextFollowTime").html("N/A");
-        $("#closePopupBtn").hide();
-
-
-        $("#currentFollowingNumber").html(0);
-        $("#totalFollowingNumber").html(this.idsToFollow.length);
+        $("#" + buttonId).addClass("disabled-button");
+        $("#" + buttonId).attr("disabled", "disabled");
     };
-    /**
-     * Closes the follow popup.
-     */
-    this.closeFollowPopup = function()
+    this.enableButton = function(buttonId)
     {
-        $("#dialogBackground").hide();
+        $("#" + buttonId).removeClass("disabled-button");
+        $("#" + buttonId).removeAttr("disabled");
     };
-    /**
-     * User triggered after setting follow interval.
-     * @private
-     */
-    this.startAutomaticFollowing = function()
-    {
-        this.followIntervalTimeMinimum = parseInt($("#followIntervalTimeMinimum").val());
-        this.followIntervalTimeMaximum = parseInt($("#followIntervalTimeMaximum").val());
 
-        if (!$.isNumeric(this.followIntervalTimeMinimum))
-        {
-            $("#followIntervalTimeMinimum").addClass("input-error");
-            return;
-        }
-        else
-        {
-            $("#followIntervalTimeMinimum").removeClass("input-error");
-        }
-        if (!$.isNumeric(this.followIntervalTimeMaximum))
-        {
-            $("#followIntervalTimeMaximum").addClass("input-error");
-            return;
-        }
-        else
-        {
-            $("#followIntervalTimeMaximum").removeClass("input-error");
-        }
-
-        if (this.followIntervalTimeMaximum < this.followIntervalTimeMinimum)
-        {
-            $("#followIntervalTimeMinimum").addClass("input-error");
-            $("#followIntervalTimeMaximum").addClass("input-error");
-            return;
-        }
-        else
-        {
-            $("#followIntervalTimeMinimum").removeClass("input-error");
-            $("#followIntervalTimeMaximum").removeClass("input-error");
-        }
-
-        //Convert seconds to ms.
-        this.followIntervalTime = this.generateIntervalTime();
-
-        $("#startFollowingBtn").attr("disabled", "disabled");
-        $("#followLoadingImage").show();
-
-        //Start by following first user immediately, rather than waiting for first countdown.
-        this.followNextUser();
-
-    };
-    /**
-     * Generates a random interval time between (followIntervalTimeMinimum and followIntervalTimeMaximum) * 1000 to get ms.
-     * @returns {number} The result in ms.
-     */
-    this.generateIntervalTime = function()
-    {
-        var random = Math.floor(Math.random() * (this.followIntervalTimeMaximum - this.followIntervalTimeMinimum + 1)) + this.followIntervalTimeMinimum;
-        return random * 1000;
-    };
-    /**
-     * Called for each user that is to be followed. Starts countdown, at the end of which it will call
-     * followNextUser.  Relies on followIntervalTime being set and assumes there is another user to follow.
-     */
-    this.startFollowInterval = function()
-    {
-        this.followIntervalTime = this.generateIntervalTime();
-        $("#nextFollowTime").html(this.followIntervalTime / 1000);
-
-        this.followTicks = 0;
-
-        var _this = this;
-        this.followInterval = setInterval(function()
-        {
-            _this.followTicks++;
-            $("#nextFollowTime").html((_this.followIntervalTime - (_this.followTicks * 1000)) / 1000);
-            if ((_this.followTicks * 1000) >= _this.followIntervalTime)
-            {
-                //Timer has expired, Follow user.
-                clearInterval(_this.followInterval);
-                _this.followNextUser();
-            }
-        }, 1000);
-    };
-    /**
-     * Plucks the first element in the idsToFollow array and sends a follow request to Twitter for this user.
-     * On success assuming there are more users to follow still, this method will start a new interval.
-     */
-    this.followNextUser = function()
-    {
-        var nextId = this.idsToFollow.shift();
-        var username = $("#username" + nextId).html();
-
-        $("#currentFollowStatus").html("Attempting to follow " + username + ".");
-
-
-        var _this = this;
-
-        var requestObject = new FindToFollow.FollowJsonRequest();
-        requestObject.toFollowUserId = nextId;
-        requestObject.twitterUsername = $("#twitterUsername").val();
-        requestObject.action = "follow";
-
-        $.post("FindToFollow.php", requestObject)
-            .done(function(response)
-            {
-                response = JSON.parse(response);
-
-                if (response.hasError)
-                {
-                    $("#currentFollowStatus").html("Error from " + username + ". Stopping all follows. [" + response.errorMessage + "]");
-                }
-                else
-                {
-                    $("#currentFollowingNumber").html(parseInt($("#currentFollowingNumber").html()) + 1);
-
-                    //Lets remove table
-                    $("#userRow" + nextId).fadeOut(1000, function()
-                    {
-                        $(this).remove();
-                        _this.updateSelectedCount();
-                    });
-
-
-                    if (_this.idsToFollow.length > 0)
-                    {
-                        //More users to follow still, start timer again.
-                        nextId = _this.idsToFollow[0];
-                        username = $("#username" + nextId).html();
-
-                        $("#currentFollowStatus").html("Next user to follow is " + username + ".");
-                        _this.startFollowInterval();
-                    }
-                    else
-                    {
-                        //We have finished following all users.
-                        $("#currentFollowStatus").html("Done following all users.");
-                        $("#closePopupBtn").show();
-                        $("#followLoadingImage").hide();
-                    }
-                }
-            })
-            .fail(function()
-            {
-                $("#currentFollowStatus").addClass("error-message");
-                $("#currentFollowStatus").html("An unexpected error occurred during the request.");
-            });
-
-    };
 };
 /**
  * Structure for requests sent to backend.
@@ -608,3 +717,9 @@ FindToFollow.FetchQueueJsonRequest = function()
     this.twitterUsername = "";
     this.action = "fetchqueue";
 };
+
+$(document).ready(function()
+{
+    //Pull queue on initial load of application.
+    FindToFollow.Follow.refreshQueue();
+});

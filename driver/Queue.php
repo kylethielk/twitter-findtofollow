@@ -68,7 +68,9 @@ class FTF_Driver_Queue extends FTF_Driver_Base
     {
         $users = $this->userData->fetchCachedUsers($this->userData->queuedUserIds);
 
-        $html = $this->generateUserTablesHtml($users, 'followPage');
+        $html = '<h1>Users in Queue</h1>';
+
+        $html .= $this->generateUserTablesHtml($users, 'followPage',true);
         return $html;
     }
 

@@ -83,6 +83,7 @@ class FTF_Driver_Follow extends FTF_Driver_Twitter
         {
             //We successfully followed user, add them to our list.
             $this->userData->mergeInFriendIds(array($this->followRequest->toFollowUserId));
+            $this->userData->removeUserIdFromQueue($this->followRequest->toFollowUserId);
             $this->userData->flushPrimaryUserData();
             $this->userData->updateUserData($this->followRequest->toFollowUserId, time());
             //Update follow date

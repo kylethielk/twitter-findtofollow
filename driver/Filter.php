@@ -101,6 +101,15 @@ class FTF_Driver_Filter extends FTF_Driver_Twitter
         $this->addLogMessage('Removed a total of ' . ($before_remove_count - $after_remove_count) . ' people because you are already following them.');
     }
 
+    public function removeUsersInQueue()
+    {
+        $before_remove_count = count($this->potentialFriendIds);
+        $this->potentialFriendIds = array_diff($this->potentialFriendIds, $this->userData->queuedUserIds);
+        $after_remove_count = count($this->potentialFriendIds);
+
+        $this->addLogMessage('Removed a total of ' . ($before_remove_count - $after_remove_count) . ' people because you have them in your queue.');
+    }
+
     /**
      * Given an array of twitter userids, break out the ids we already have cached locally so that we don't have to fetch them from twitter.
      * @param $ids Array of twitter ids.
@@ -158,6 +167,7 @@ class FTF_Driver_Filter extends FTF_Driver_Twitter
     public function buildFilteredFollowers()
     {
         $this->removeUsersAlreadyFollowed();
+        $this->removeUsersInQueue();
 
         $this->filteredUsers = array();
 
@@ -220,8 +230,6 @@ class FTF_Driver_Filter extends FTF_Driver_Twitter
                 <div id="followBtn" onclick="FindToFollow.Filter.addSelectedUsersToQueue();" class="blue-button">Add To Queue (<span id="filterPageSelectedCount">0</span>)</div>
             </div>
             <br />';
-        $counter = 1;
-
 
         $html = $html . $this->generateUserTablesHtml($this->filteredUsers, 'filterPage');
         return $html;
