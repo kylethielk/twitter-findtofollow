@@ -3,9 +3,9 @@ twitter-findtofollow
 
 A PHP tool to find and filter potential users to follow.
 
-Written to automate the task of finding interesting and similar users that are likely to follow you back. The potential users are drawn from the followers of one user you specify. A list of criteria is then applied to each user in order to filter out those that are of little interest.
+Written to automate the task of finding interesting and similar users that are likely to follow you back. The potential users are drawn from the followers of one user you specify. A list of criteria is then applied to each user in order to filter out those that are of little interest. These filtered users are used to build up a queue of users that we can then start following automatically.
 
-The selected users can then be followed automatically at random intervals generated between a specified minimum and maximum.  
+The selected users can then be followed automatically at random intervals generated between a specified minimum and maximum by processing the queue.
 
 The application caches user profile information to cut down on Twitter API calls and network traffic. All caching is done on the local file system as I explicity wanted to avoid any reliance on a DB.
 
@@ -20,12 +20,19 @@ Instructions
 
 Assuming you have a server capable of running php, the only non-standard requirement is that cURL is installed and activated. Personally I've been running [WAMP Server](http://www.wampserver.com/).
 
-Rename **config.php.txt** to **config.php**. Then add your Twitter API keys into config.php. Note your api keys must have read/write access.
+Rename **Config.php.txt** to **Config.php**. Then add your Twitter API keys and your twitter username into Config.php. Note your api keys must have read/write access.
 
 Then simply load index.html in your browser and let the application do the rest.
 
 Updates
 -------
+
+**June 9, 2013** - Release 1.0 has been branched off. This branch contains the last code that forces following without the use of a queue. Now all filtered users are first added to a queue, and then the queue is processed independently from filtering.  Before upgrading to latest code either 
+
+- Switch to release-1.0 branch and continue on as normal, **OR**
+- Stay on Develop and start using the queue mechanism.
+
+Highly recommended to backup your userdata directory during any upgrade, just in case.
 
 **June 3, 2013** - You can now follow other users automatically from within the application. No more opening 25 tabs at once to follow users. The following is done automatically and is staggered based on a time range you specifiy. 
 
