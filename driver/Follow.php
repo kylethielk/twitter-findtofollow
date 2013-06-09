@@ -42,7 +42,7 @@ class FTF_Driver_Follow extends FTF_Driver_Twitter
      */
     public function FTF_Driver_Follow($apiKeys, $followRequest)
     {
-        parent::__construct($apiKeys, $followRequest->twitterUsername);
+        parent::__construct($apiKeys, FTF_Config::$twitterUsername);
         $this->followRequest = $followRequest;
     }
 

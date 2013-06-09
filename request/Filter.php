@@ -34,11 +34,6 @@ class FTF_Request_Filter extends FTF_Request_Base
     const FOLLOWERS_GREATER_THAN_FRIENDS = 'followersGreaterThanFriends';
 
     /**
-     * Username for person running this app.
-     * @var String
-     */
-    public $twitterUsername;
-    /**
      * We build our list of potential people to follow based one person's list of followers. This is their username.
      * @var String
      */

@@ -30,11 +30,6 @@
 class FTF_Request_Base
 {
 
-    /**
-     * Username for person running this app.
-     * @var String
-     */
-    public $twitterUsername;
 
     /**
      * Validate all required fields are set.
@@ -42,13 +37,7 @@ class FTF_Request_Base
      */
     public function validate()
     {
-        //Required fields
-        if (!isset($this->twitterUsername))
-        {
-            return false;
-        }
         return true;
-
     }
 }
 

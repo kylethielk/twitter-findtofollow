@@ -31,11 +31,6 @@ class FTF_Request_QueueAdd extends FTF_Request_Base
 {
 
     /**
-     * Username for person running this app.
-     * @var String
-     */
-    public $twitterUsername;
-    /**
      * Array of UserIds to add to queue.
      * @var array user ids.
      */

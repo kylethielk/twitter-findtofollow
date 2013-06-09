@@ -41,7 +41,7 @@ class FTF_Driver_Queue extends FTF_Driver_Base
      */
     public function FTF_Driver_Queue($queueRequest)
     {
-        parent::__construct($queueRequest->twitterUsername);
+        parent::__construct(FTF_Config::$twitterUsername);
         $this->queueRequest = $queueRequest;
     }
 
@@ -55,7 +55,7 @@ class FTF_Driver_Queue extends FTF_Driver_Base
             trigger_error("Invalid request passed for addUserIdsToQueue.", E_USER_ERROR);
         }
 
-        $this->userData = new FTF_UserData($this->queueRequest->twitterUsername);
+        $this->userData = new FTF_UserData($this->twitterUsername);
         $this->userData->mergeInUserIdsToQueue($this->queueRequest->queuedUserIds);
         $this->userData->flushPrimaryUserData();
     }

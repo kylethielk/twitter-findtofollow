@@ -13,8 +13,6 @@
 </div>
 <div id="wrapper">
     <ul class="tab-wrapper">
-
-        <li id="statsPageTab" onclick="FindToFollow.changePage('statsPage');">Stats</li>
         <li id="helpPageTab" onclick="FindToFollow.changePage('helpPage');">Help</li>
         <li id="followPageTab" onclick="FindToFollow.changePage('followPage');">Follow</li>
         <li id="filterPageTab" onclick="FindToFollow.changePage('filterPage');" class="tab-selected">Find & Follow</li>
@@ -43,7 +41,7 @@
             </div>
         </div>
         <div class="rightColumn">
-            <div class="content-block" style="min-height: 709px">
+            <div class="content-block" style="min-height: 655px">
                 <input type="button" value="Refresh Queue" id="refreshQueueBtn"
                        onclick="FindToFollow.Follow.refreshQueue();return false;"
                        class="blue-button"/>
@@ -65,9 +63,6 @@
                        class="blue-button"/>
 
                 <h2>Required Fields</h2>
-                <label for="twitterUsername">Your Twitter Username:</label>
-                <input type="text" id="twitterUsername" placeholder="kylethielk" title="Your username on twitter."
-                       class="medium-input" value=""/>
                 <label for="sourceUsername">Follower Source Username:</label>
                 <input type="text" id="sourceUsername" placeholder="patio11"
                        title="Username of person whose follower list we will pull users from." class="medium-input"
@@ -102,7 +97,7 @@
             </div>
         </div>
         <div class="rightColumn">
-            <div class="content-block" style="min-height: 709px">
+            <div class="content-block" style="min-height: 655px">
 
                 <br/>
                 <img id="filterLoadingImage" src="./images/ajax-loader.gif" style="display: none"/>

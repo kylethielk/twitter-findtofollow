@@ -31,11 +31,6 @@ class FTF_Request_Follow extends FTF_Request_Base
 {
 
     /**
-     * @var String Username of person we are running application for.
-     */
-    public $twitterUsername;
-
-    /**
      * Userid for person we want to follow.
      * @var number
      */

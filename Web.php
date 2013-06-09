@@ -58,6 +58,11 @@ class FTF_Web
         {
             return;
         }
+        else if (!FTF_Web::validateConfig())
+        {
+            FTF_Web::writeErrorResponse("Config.php has not been setup or configured properly.");
+        }
+
         $action = $data['action'];
 
         if ($action == FTF_Web::ACTION_RUN)
@@ -121,8 +126,6 @@ class FTF_Web
      */
     private static function followUser($data)
     {
-        global $apiKeys;
-
         $request = new FTF_Request_Follow($data);
 
         if (!isset($request) || !$request->validate())
@@ -131,7 +134,7 @@ class FTF_Web
         }
 
 
-        $follow = new FTF_Driver_Follow($apiKeys, $request);
+        $follow = new FTF_Driver_Follow(FTF_Config::$apiKeys, $request);
         FTF_Web::$currentDriver = $follow;
 
         $follow->followUser();
@@ -143,7 +146,6 @@ class FTF_Web
      */
     private static function filterFollowers($data)
     {
-        global $apiKeys;
 
         $settings = new FTF_Request_Filter($data);
 
@@ -153,7 +155,7 @@ class FTF_Web
         }
         else
         {
-            $findToFollow = new FTF_Driver_Filter($apiKeys, $settings);
+            $findToFollow = new FTF_Driver_Filter(FTF_Config::$apiKeys, $settings);
 
             FTF_Web::$currentDriver = $findToFollow;
 
@@ -221,6 +223,34 @@ class FTF_Web
 
         /* Don't execute PHP internal error handler */
         return true;
+    }
+
+    /**
+     * Validates our config has been setup.
+     * @return bool True if valid, false otherwise.
+     */
+    public static function validateConfig()
+    {
+
+        if (!class_exists('FTF_Config'))
+        {
+            return false;
+        }
+        else if (empty(FTF_Config::$twitterUsername) || FTF_Config::$twitterUsername == 'CHANGE_THIS')
+        {
+            return false;
+        }
+        else if (FTF_Config::$apiKeys['oauth_access_token'] == 'CHANGE_THIS'
+            || FTF_Config::$apiKeys['oauth_access_token_secret'] == 'CHANGE_THIS'
+            || FTF_Config::$apiKeys['consumer_key'] == 'CHANGE_THIS'
+            || FTF_Config::$apiKeys['consumer_secret'] == 'CHANGE_THIS'
+        )
+        {
+            return false;
+        }
+
+        return true;
+
     }
 
 }

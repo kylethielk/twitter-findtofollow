@@ -133,7 +133,6 @@ var FindToFollow = new function()
 
             var requestObject = new FindToFollow.AddQueueJsonRequest();
             requestObject.queuedUserIds = idsToQueue;
-            requestObject.twitterUsername = $("#twitterUsername").val();
 
             $.post("FindToFollow.php", requestObject)
                 .done(function(response)
@@ -176,15 +175,6 @@ var FindToFollow = new function()
         {
 
             var hasError = false;
-            if (!requestObject.twitterUsername)
-            {
-                hasError = true;
-                $("#twitterUsername").addClass("input-error");
-            }
-            else
-            {
-                $("#twitterUsername").removeClass("input-error");
-            }
 
             if (!requestObject.sourceUsername)
             {
@@ -329,7 +319,7 @@ var FindToFollow = new function()
             FindToFollow.Follow.obscureResults();
 
             var requestObject = new FindToFollow.FetchQueueJsonRequest();
-            requestObject.twitterUsername = $("#twitterUsername").val();
+
 
             $.post("FindToFollow.php", requestObject)
                 .done(function(response)
@@ -340,7 +330,7 @@ var FindToFollow = new function()
 
                     if (response.hasError)
                     {
-                        FindToFollow.showErrorMessage("Error fetching current queue.");
+                        FindToFollow.showErrorMessage("Error fetching current queue: " + response.errorMessage);
                     }
                     else
                     {
@@ -519,7 +509,6 @@ var FindToFollow = new function()
 
             var requestObject = new FindToFollow.FollowJsonRequest();
             requestObject.toFollowUserId = nextId;
-            requestObject.twitterUsername = $("#twitterUsername").val();
 
             $.post("FindToFollow.php", requestObject)
                 .done(function(response)
@@ -584,7 +573,7 @@ var FindToFollow = new function()
             {
                 $("#errorBar").hide();
             }
-        })
+        }, timeout);
     };
     /**
      * Called each time a tab is clicked.
@@ -677,7 +666,6 @@ var FindToFollow = new function()
  */
 FindToFollow.FilterJsonRequest = function()
 {
-    this.twitterUsername = "";
     this.sourceUsername = "";
     this.followerLimit = -1;
     this.minimumFollowers = -1;
@@ -695,7 +683,6 @@ FindToFollow.FilterJsonRequest = function()
 FindToFollow.FollowJsonRequest = function()
 {
     this.toFollowUserId = -1;
-    this.twitterUsername = "";
     this.action = "follow";
 };
 /**
@@ -705,7 +692,6 @@ FindToFollow.FollowJsonRequest = function()
 FindToFollow.AddQueueJsonRequest = function()
 {
     this.queuedUserIds = [];
-    this.twitterUsername = "";
     this.action = "addqueue";
 };
 /**
@@ -714,7 +700,6 @@ FindToFollow.AddQueueJsonRequest = function()
  */
 FindToFollow.FetchQueueJsonRequest = function()
 {
-    this.twitterUsername = "";
     this.action = "fetchqueue";
 };
 

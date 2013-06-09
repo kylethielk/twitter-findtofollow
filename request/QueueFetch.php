@@ -30,11 +30,6 @@ require_once(dirname(__FILE__) . '/Base.php');
  */
 class FTF_Request_QueueFetch extends FTF_Request_Base
 {
-    /**
-     * Username for person running this app.
-     * @var String
-     */
-    public $twitterUsername;
 
     /**
      * Construct from json object received from front-end.

@@ -57,7 +57,7 @@ class FTF_Driver_Filter extends FTF_Driver_Twitter
      */
     public function __construct($apiKeys, $filterRequest)
     {
-        parent::__construct($apiKeys, $filterRequest->twitterUsername);
+        parent::__construct($apiKeys, FTF_Config::$twitterUsername);
 
         $this->filterRequest = $filterRequest;
         $this->timer = new timer;
@@ -71,7 +71,7 @@ class FTF_Driver_Filter extends FTF_Driver_Twitter
      */
     public function buildFriendIds()
     {
-        $friendIds = $this->twitterFriendsIds($this->filterRequest->twitterUsername);
+        $friendIds = $this->twitterFriendsIds($this->twitterUsername);
 
         $this->addLogMessage('You have ' . ($friendIds ? count($friendIds) : 0) . ' friends according to twitter.');
 
