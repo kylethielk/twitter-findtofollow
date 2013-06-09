@@ -86,8 +86,24 @@ class FTF_UserData
             fclose($primaryFilePointer);
 
             $readObject = json_decode($read);
-            $this->friendIds = (array)$readObject->friendIds;
-            $this->queuedUserIds = (array)$readObject->queuedUserIds;
+
+            if (isset($readObject->friendIds))
+            {
+                $this->friendIds = (array)$readObject->friendIds;
+            }
+            else
+            {
+                $this->friendIds = array();
+            }
+            if (isset($readObject->queuedUserIds))
+            {
+                $this->queuedUserIds = (array)$readObject->queuedUserIds;
+            }
+            else
+            {
+                $this->queuedUserIds = array();
+            }
+
         }
 
     }
@@ -143,13 +159,14 @@ class FTF_UserData
      */
     public function removeUserIdFromQueue($userId)
     {
-        if(!isset($userId))
+        if (!isset($userId))
         {
             return;
         }
         $this->queuedUserIds = array_diff($this->queuedUserIds, array($userId));
 
     }
+
     /**
      * Add a list of userIds to our queue. Be sure to call flushPrimaryUserData to persist
      * to filesystem.
@@ -209,8 +226,8 @@ class FTF_UserData
         }
 
         $toWrite = (Object)array();
-        $toWrite->friendIds = $this->friendIds;
-        $toWrite->queuedUserIds = $this->queuedUserIds;
+        $toWrite->friendIds = (array)$this->friendIds;
+        $toWrite->queuedUserIds = (array)$this->queuedUserIds;
 
         $primaryFilePointer = fopen($primaryFileName, 'w');
         fwrite($primaryFilePointer, json_encode($toWrite));
