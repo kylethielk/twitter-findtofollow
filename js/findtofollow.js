@@ -249,6 +249,62 @@ var FindToFollow = new function()
 
         return this;
     };
+    this.UnFollow = new function()
+    {
+        this.processingUnFollows = false;
+
+        /**
+         * Obscure the results, just a nice UI effect for when we are refreshing the results.
+         */
+        this.obscureResults = function()
+        {
+            $("#unFollowResults").fadeTo(200, 0.2);
+        };
+        /**
+         * Fades back to full opacity once results have been refreshed.
+         */
+        this.unObscureResults = function()
+        {
+            $("#unFollowResults").fadeTo(250, 1);
+        };
+
+
+        this.refreshUsers = function()
+        {
+            if (FindToFollow.UnFollow.processingUnFollows)
+            {
+                return;
+            }
+
+            //When running locally the refresh can happen so fast we don't even notice,
+            //do a little animating to indicate refresh actually happened
+            FindToFollow.UnFollow.obscureResults();
+
+            var requestObject = new FindToFollow.FetchUnFollowUserJsonRequest();
+
+
+            $.post("FindToFollow.php", requestObject)
+                .done(function(response)
+                {
+
+                    response = JSON.parse(response);
+                    FindToFollow.UnFollow.unObscureResults();
+
+                    if (response.hasError)
+                    {
+                        FindToFollow.showErrorMessage("Error fetching users to un-follow: " + response.errorMessage);
+                    }
+                    else
+                    {
+                        $("#unFollowResults").html(response.html);
+                    }
+                })
+                .fail(function()
+                {
+                    FindToFollow.showErrorMessage("An unexpected error occurred during the request.");
+                });
+        }
+    };
     /**
      * All methods utilized by Follow Page.
      */
@@ -703,6 +759,10 @@ FindToFollow.AddQueueJsonRequest = function()
 FindToFollow.FetchQueueJsonRequest = function()
 {
     this.action = "fetchqueue";
+};
+FindToFollow.FetchUnFollowUserJsonRequest = function()
+{
+    this.action = "fetchunfollowusers";
 };
 
 $(document).ready(function()

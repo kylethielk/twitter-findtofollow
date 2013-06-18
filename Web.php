@@ -25,12 +25,14 @@
 
 require_once(dirname(__FILE__) . '/request/QueueAdd.php');
 require_once(dirname(__FILE__) . '/request/QueueFetch.php');
+require_once(dirname(__FILE__) . '/request/UnFollowUsersFetch.php');
 require_once(dirname(__FILE__) . '/request/Filter.php');
 require_once(dirname(__FILE__) . '/request/Follow.php');
 require_once(dirname(__FILE__) . '/WebResponse.php');
 require_once(dirname(__FILE__) . '/driver/Filter.php');
 require_once(dirname(__FILE__) . '/driver/Follow.php');
 require_once(dirname(__FILE__) . '/driver/Queue.php');
+require_once(dirname(__FILE__) . '/driver/UnFollow.php');
 
 /**
  * Executes AJAX requests from html file.
@@ -42,6 +44,7 @@ class FTF_Web
     const ACTION_FOLLOW = 'follow';
     const ACTION_ADD_QUEUE = 'addqueue';
     const ACTION_FETCH_QUEUE = 'fetchqueue';
+    const ACTION_FETCH_USERS_TO_UNFOLLOW = 'fetchunfollowusers';
 
     /**
      * @var FTF_Driver_Base
@@ -81,6 +84,27 @@ class FTF_Web
         {
             FTF_Web::fetchQueue($data);
         }
+        else if ($action == FTF_Web::ACTION_FETCH_USERS_TO_UNFOLLOW)
+        {
+            FTF_Web::fetchUnFollowUsers();
+        }
+    }
+
+    /**
+     * Process request to fetch queue.
+     */
+    public static function fetchUnFollowUsers()
+    {
+        $request = new FTF_Request_UnFollowUsersFetch();
+
+        if (!isset($request) || !$request->validate())
+        {
+            FTF_Web::writeErrorResponse('Queue Request invalid or not supplied.' . print_r($request, true));
+        }
+
+        $queue = new FTF_Driver_UnFollow(FTF_Config::$apiKeys);
+
+        FTF_Web::writeValidResponse($queue->generateHtmlForUsers(), "");
     }
 
     /**
