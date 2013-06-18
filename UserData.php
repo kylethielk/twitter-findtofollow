@@ -89,7 +89,7 @@ class FTF_UserData
 
             if (isset($readObject->friendIds))
             {
-                $this->friendIds = (array)$readObject->friendIds;
+                $this->friendIds = array_values($readObject->friendIds);
             }
             else
             {
@@ -97,7 +97,7 @@ class FTF_UserData
             }
             if (isset($readObject->queuedUserIds))
             {
-                $this->queuedUserIds = (array)$readObject->queuedUserIds;
+                $this->queuedUserIds = array_values($readObject->queuedUserIds);
             }
             else
             {
@@ -226,8 +226,8 @@ class FTF_UserData
         }
 
         $toWrite = (Object)array();
-        $toWrite->friendIds = (array)$this->friendIds;
-        $toWrite->queuedUserIds = (array)$this->queuedUserIds;
+        $toWrite->friendIds = array_values($this->friendIds);
+        $toWrite->queuedUserIds = array_values($this->queuedUserIds);
 
         $primaryFilePointer = fopen($primaryFileName, 'w');
         fwrite($primaryFilePointer, json_encode($toWrite));
