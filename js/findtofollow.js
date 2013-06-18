@@ -436,14 +436,16 @@ var FindToFollow = new function()
          */
         this.showCountdownOverlay = function(rowId, timeout)
         {
-            var offset = $("#" + rowId).offset();
-            var width = $("#" + rowId).width();
-            var height = $("#" + rowId).height();
+            var row = $("#" + rowId);
+            var top = row.position().top;
+            var left = row.position().left;
+            var width = row.width();
+            var height = row.height();
 
             var overlayId = rowId + "Overlay";
-            var div = '<div id="' + overlayId + '" style="margin:0;z-index: 500; height: ' + height + 'px;width: ' + width + 'px;position:absolute; top: ' + offset.top + 'px; left: ' + offset.left + 'px; background-color: rgba(181, 255, 170,0.5);">&nbsp;</div>';
+            var div = '<div id="' + overlayId + '" style="margin:0;z-index: 500; height: ' + height + 'px;width: ' + width + 'px;position:absolute; top: ' + top + 'px; left: ' + left + 'px; background-color: rgba(181, 255, 170,0.5);">&nbsp;</div>';
 
-            $("body").append(div);
+            $("#followPage .rightColumn .content-block").append(div);
             $("#" + overlayId).animate({width: 0}, timeout, "swing", function()
             {
                 $("#" + overlayId).remove();
