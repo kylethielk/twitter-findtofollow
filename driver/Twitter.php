@@ -86,7 +86,7 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
         $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
         $url = 'https://api.twitter.com/1.1/friends/ids.json';
 
-        $getField = '?cursor=' . $cursor . '&screen_name=' . $username . '&count=150';
+        $getField = '?cursor=' . $cursor . '&screen_name=' . $username . '&count=5000';
         $requestMethod = 'GET';
 
         $response = $this->twitterApi

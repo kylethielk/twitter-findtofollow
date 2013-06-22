@@ -291,6 +291,23 @@ class FTF_UserData
         return $users;
     }
 
+    public function fetchUserFTFData($userId, $field)
+    {
+        $filename = './userdata/users/' . $userId . '.json';
+        $filePointer = fopen($filename, 'r');
+        $data = fread($filePointer, filesize($filename));
+        fclose($filePointer);
+
+        $userObject = json_decode($data, true);
+
+        if (isset($userObject[$field]))
+        {
+            return $userObject[$field];
+        }
+        return "";
+
+    }
+
     /**
      * Updates the data for the given user in our cache. Will only update the supplied parameters if they
      * are non-null and greater than 0 for numerics.
@@ -312,19 +329,19 @@ class FTF_UserData
         $userObject = json_decode($data);
 
         $changeMade = false;
-        if ($dateFollowed > 0 && is_numeric($dateFollowed))
+        if ( is_numeric($dateFollowed) && $dateFollowed > 0)
         {
             FTF_Web::$currentDriver->addLogMessage("Setting DateFollowed to: " . $dateFollowed);
             $userObject->dateFollowed = $dateFollowed;
             $changeMade = true;
         }
-        if ($dateUnfollowed > 0 && is_numeric($dateUnfollowed))
+        if (is_numeric($dateUnfollowed) && $dateUnfollowed > 0 )
         {
             FTF_Web::$currentDriver->addLogMessage("Setting DateUnfollowed to: " . $dateUnfollowed);
             $userObject->dateUnfollowed = $dateUnfollowed;
             $changeMade = true;
         }
-        if ($downloadDate > 0 && is_numeric($downloadDate))
+        if (is_numeric($downloadDate) && $downloadDate > 0)
         {
             FTF_Web::$currentDriver->addLogMessage("Setting DownloadDate to: " . $downloadDate);
             $userObject->downloadDate = $downloadDate;

@@ -31,11 +31,62 @@ class FTF_Driver_UnFollow extends FTF_Driver_Twitter
 {
 
     /**
-     * @param Array $apiKeys Our Twitter API Keys.
+     * @var FTF_Request_UnFollow
      */
-    public function FTF_Driver_UnFollow($apiKeys)
+    private $unFollowRequest;
+
+    /**
+     * @param Array $apiKeys Our Twitter API Keys.
+     * @param FTF_Request_UnFollow $unFollowRequest Optional request. Only needed if we are unfollowing a user with this instance.
+     */
+    public function FTF_Driver_UnFollow($apiKeys, $unFollowRequest = null)
     {
         parent::__construct($apiKeys, FTF_Config::$twitterUsername);
+        $this->unFollowRequest = $unFollowRequest;
+    }
+
+    /**
+     * Start the call to the Twitter API to unfollow the user specified in our $unFollowRequest.
+     * This method is terminating.
+     */
+    public function unFollowUser()
+    {
+        //Reset api exchange
+        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
+
+        //Build and send request to twitter api.
+        $url = 'https://api.twitter.com/1.1/friendships/destroy.json';
+
+        $postFields = array(
+            'user_id' => $this->unFollowRequest->toUnFollowUserId,
+        );
+
+        $requestMethod = 'POST';
+
+        $response = $this->twitterApi
+            ->setPostfields($postFields)
+            ->buildOauth($url, $requestMethod)
+            ->performRequest();
+
+        $response = json_decode($response);
+
+        $errorMessage = $this->checkForTwitterErrors($response);
+
+        if ($errorMessage !== false)
+        {
+
+            FTF_Web::writeErrorResponse("Received error from twitter: " . $errorMessage);
+            return;
+        }
+        else
+        {
+            //We successfully unfollowed user, set unfollow date.
+            $this->userData->updateUserData($this->unFollowRequest->toUnFollowUserId, -1, time());
+            //Update follow date
+            FTF_Web::writeValidResponse("", $this->generateLog());
+        }
+
+
     }
 
     /**
@@ -50,11 +101,11 @@ class FTF_Driver_UnFollow extends FTF_Driver_Twitter
 
         $nonFollowerIds = array_diff($friendIds, $followerIds);
 
-        $users = $this->fetchUserData($nonFollowerIds);
+        $users = array_reverse($this->fetchUserData($nonFollowerIds));
 
-        $html = '<h1>Users in Who Do Not Follow Back</h1>';
+        $html = '<h1>Users Who Do Not Follow Back</h1>';
 
-        $html .= $this->generateUserTablesHtml($users, 'unFollowPage', true);
+        $html .= $this->generateUserTablesHtml($users, 'unFollowPage', false);
         return $html;
     }
 

@@ -39,22 +39,6 @@ var FindToFollow = new function()
             }
         };
         /**
-         * Obscure the results, just a nice UI effect for when we are refreshing the results.
-         */
-        this.obscureResults = function()
-        {
-            $("#filterResults").fadeTo(500, 0.2);
-            $("#logContainer").fadeTo(500, 0.2);
-        };
-        /**
-         * Fades back to full opacity once results have been refreshed.
-         */
-        this.unObscureResults = function()
-        {
-            $("#filterResults").fadeTo(250, 1);
-            $("#logContainer").fadeTo(250, 1);
-        };
-        /**
          * Send a request to backend to find us some followers. This is called by the Filter Followers button
          * on the UI.
          */
@@ -69,7 +53,9 @@ var FindToFollow = new function()
             if (this.validateFilterRequest(requestObject))
             {
                 $("#filterLoadingImage").show();
-                this.obscureResults();
+
+                FindToFollow.obscureContainer("filterResults");
+                FindToFollow.obscureContainer("logContainer");
 
                 var _this = this;
 
@@ -106,7 +92,9 @@ var FindToFollow = new function()
                     {
                         FindToFollow.enableButton("sendRequestBtn");
                         $("#filterLoadingImage").hide();
-                        _this.unObscureResults();
+
+                        FindToFollow.unObscureContainer("filterResults");
+                        FindToFollow.unObscureContainer("logContainer");
                     });
             }
             else
@@ -251,24 +239,47 @@ var FindToFollow = new function()
     };
     this.UnFollow = new function()
     {
+        /**
+         * The minimum time between unfollows.
+         * @type {number}
+         */
+        this.unFollowIntervalTimeMinimum = -1;
+        /**
+         * The maximum time between unfollows.
+         * @type {number}
+         */
+        this.unFollowIntervalTimeMaximum = -1;
+        /**
+         * The amount of time in ms between each unfollow.
+         * @type {number}
+         */
+        this.unFollowIntervalTime = 0;
+        /**
+         * The interval # returned from setInterval.
+         * @type {null}
+         */
+        this.unFollowInterval = null;
+        /**
+         * Array of ids to start unfollowing.
+         * @type {Array}
+         */
+        this.idsToUnFollow = [];
+        /**
+         * Keeps track of how many ticks of the interval we have had. This allows us to have a countdown timer.
+         * @type {number}
+         */
+        this.unFollowTicks = 0;
+
+        /**
+         * Simple Boolean flag that will be true if we are in the middle of processing unfollows.
+         * @type {boolean}
+         */
         this.processingUnFollows = false;
 
-        /**
-         * Obscure the results, just a nice UI effect for when we are refreshing the results.
-         */
-        this.obscureResults = function()
-        {
-            $("#unFollowResults").fadeTo(200, 0.2);
-        };
-        /**
-         * Fades back to full opacity once results have been refreshed.
-         */
-        this.unObscureResults = function()
-        {
-            $("#unFollowResults").fadeTo(250, 1);
-        };
 
-
+        /**
+         * Refresh the list of users shown on screen that are not following us back.
+         */
         this.refreshUsers = function()
         {
             if (FindToFollow.UnFollow.processingUnFollows)
@@ -278,17 +289,19 @@ var FindToFollow = new function()
 
             //When running locally the refresh can happen so fast we don't even notice,
             //do a little animating to indicate refresh actually happened
-            FindToFollow.UnFollow.obscureResults();
+            FindToFollow.obscureContainer("unFollowResults");
 
             var requestObject = new FindToFollow.FetchUnFollowUserJsonRequest();
 
 
+            FindToFollow.disableButton("refreshUnFollowBtn");
+            FindToFollow.disableButton("unFollowUsersBtn");
+
             $.post("FindToFollow.php", requestObject)
                 .done(function(response)
                 {
-
                     response = JSON.parse(response);
-                    FindToFollow.UnFollow.unObscureResults();
+                    FindToFollow.unObscureContainer("unFollowResults");
 
                     if (response.hasError)
                     {
@@ -302,8 +315,213 @@ var FindToFollow = new function()
                 .fail(function()
                 {
                     FindToFollow.showErrorMessage("An unexpected error occurred during the request.");
+                })
+                .always(function()
+                {
+                    FindToFollow.enableButton("refreshUnFollowBtn");
+                    FindToFollow.enableButton("unFollowUsersBtn");
                 });
-        }
+
+        };
+        /**
+         * Called by button on UI. Starts processing the queue with settings supplied on the UI.
+         */
+        this.startAutomaticUnFollowing = function()
+        {
+            this.unFollowIntervalTimeMinimum = parseInt($("#unFollowIntervalTimeMinimum").val());
+            this.unFollowIntervalTimeMaximum = parseInt($("#unFollowIntervalTimeMaximum").val());
+
+
+            if (!$.isNumeric(this.unFollowIntervalTimeMinimum))
+            {
+                $("#unFollowIntervalTimeMinimum").addClass("input-error");
+                return;
+            }
+            else
+            {
+                $("#unFollowIntervalTimeMinimum").removeClass("input-error");
+            }
+            if (!$.isNumeric(this.unFollowIntervalTimeMaximum))
+            {
+                $("#unFollowIntervalTimeMaximum").addClass("input-error");
+                return;
+            }
+            else
+            {
+                $("#unFollowIntervalTimeMaximum").removeClass("input-error");
+            }
+
+            if (this.unFollowIntervalTimeMaximum < this.unFollowIntervalTimeMinimum)
+            {
+                $("#unFollowIntervalTimeMinimum").addClass("input-error");
+                $("#unFollowIntervalTimeMaximum").addClass("input-error");
+                return;
+            }
+            else
+            {
+                $("#unFollowIntervalTimeMinimum").removeClass("input-error");
+                $("#unFollowIntervalTimeMaximum").removeClass("input-error");
+            }
+
+
+            //Convert seconds to ms.
+            this.unFollowIntervalTime = FindToFollow.generateIntervalTime(this.unFollowIntervalTimeMinimum, this.unFollowIntervalTimeMaximum);
+
+
+            this.idsToUnFollow = $("#unFollowPage .user-table-selected").map(function()
+            {
+                return $(this).data("user-id");
+
+            }).get();
+
+            if (!this.idsToUnFollow || this.idsToUnFollow.length < 1)
+            {
+                FindToFollow.showErrorMessage("Please select atleast one user to unfollow.");
+                return;
+            }
+
+            this.preUnFollowSetup();
+
+            //Start by following first user immediately, rather than waiting for first countdown.
+            var firstRowId = "unFollowPageUserRow" + this.idsToUnFollow[0];
+            FindToFollow.showCountdownOverlay("unFollowPage", firstRowId, 500);
+
+            this.unFollowNextUser();
+
+        };
+        /**
+         * Initializes the UI for automatic unfollowing i.e disables buttons and form fields.
+         */
+        this.preUnFollowSetup = function()
+        {
+            FindToFollow.disableButton("refreshUnFollowBtn");
+            FindToFollow.disableButton("unFollowUsersBtn");
+
+            //Hide users we are not unfollowing
+            $("#unFollowPage .user-table").each(function(index)
+            {
+                if (!$(this).hasClass("user-table-selected"))
+                {
+                    $(this).hide();
+                }
+                else
+                {
+                    //Remove green selected background
+                    $(this).removeClass("user-table-selected");
+                    //Disable clicking of row
+                    $(this).attr("onclick", "").unbind("click");
+                    //Disable clicking of checkbox
+                    $(this).find("input.row-checkbox").attr("disabled", "disabled");
+                }
+            });
+
+
+            FindToFollow.UnFollow.processingUnFollows = true;
+        };
+        /**
+         * Re-Enables the UI for automatic unfollowing i.e enables buttons and form fields.
+         */
+        this.postUnFollowTeardown = function()
+        {
+            FindToFollow.enableButton("refreshUnFollowBtn");
+            FindToFollow.enableButton("unFollowUsersBtn");
+
+
+            //Re-show users we did not unfollow.
+            $("#unFollowPage .user-table").each(function(index)
+            {
+                if ($(this).is(":visible"))
+                {
+                    //We must have errored out, re-select row
+                    var checkBox = $(this).find("input.row-checkbox");
+                    checkBox.attr("disabled", "");
+
+                    $(this).addClass("user-table-selected");
+
+                }
+
+                $(this).show();
+            });
+
+            FindToFollow.updateSelectedCount("unFollowPage");
+
+
+            FindToFollow.UnFollow.processingUnFollows = false;
+        };
+        /**
+         * Plucks the first element in the idsToUnFollow array and sends an unfollow request to Twitter for this user.
+         * On success assuming there are more users to unfollow still, this method will start a new interval.
+         */
+        this.unFollowNextUser = function()
+        {
+            var nextId = this.idsToUnFollow.shift();
+            var rowId = "unFollowPageUserRow" + nextId;
+
+            var requestObject = new FindToFollow.UnFollowJsonRequest();
+            requestObject.toUnFollowUserId = nextId;
+
+            $.post("FindToFollow.php", requestObject)
+                .done(function(response)
+                {
+                    response = JSON.parse(response);
+
+                    if (response.hasError)
+                    {
+                        FindToFollow.showErrorMessage("Error from twitter. Stopping all unfollows. [" + response.errorMessage + "]");
+                        FindToFollow.changePage('unFollowPage');
+                        FindToFollow.UnFollow.postUnFollowTeardown();
+                    }
+                    else
+                    {
+                        //Remove the row from UI
+                        $("#" + rowId).remove();
+
+                        if (FindToFollow.UnFollow.idsToUnFollow.length > 0)
+                        {
+                            FindToFollow.UnFollow.startUnFollowInterval();
+                        }
+                        else
+                        {
+                            FindToFollow.UnFollow.postUnFollowTeardown();
+                        }
+                    }
+                })
+                .fail(function()
+                {
+                    FindToFollow.showErrorMessage("An unexpected error occurred during the request.", 60000);
+                    FindToFollow.changePage('unFollowPage');
+                    FindToFollow.UnFollow.postUnFollowTeardown();
+                });
+
+        };
+        /**
+         * Called for each user that is to be unfollowed. Starts countdown, at the end of which it will call
+         * unFollowNextUser.  Relies on unFollowIntervalTime being set and assumes there is another user to unfollow.
+         */
+        this.startUnFollowInterval = function()
+        {
+            this.unFollowIntervalTime = FindToFollow.generateIntervalTime(this.unFollowIntervalTimeMinimum, this.unFollowIntervalTimeMaximum);
+            this.unFollowTicks = 0;
+
+            var nextId = this.idsToUnFollow[0];
+            var rowId = "unFollowPageUserRow" + nextId;
+
+            FindToFollow.showCountdownOverlay("unFollowPage", rowId, this.unFollowIntervalTime + 1000);
+
+
+            var _this = this;
+            this.unFollowInterval = setInterval(function()
+            {
+                _this.unFollowTicks++;
+
+                if ((_this.unFollowTicks * 1000) >= _this.unFollowIntervalTime)
+                {
+                    //Timer has expired, Follow user.
+                    clearInterval(_this.unFollowInterval);
+                    _this.unFollowNextUser();
+                }
+            }, 1000);
+        };
     };
     /**
      * All methods utilized by Follow Page.
@@ -347,20 +565,6 @@ var FindToFollow = new function()
         this.processingQueue = false;
 
         /**
-         * Obscure the results, just a nice UI effect for when we are refreshing the results.
-         */
-        this.obscureResults = function()
-        {
-            $("#followResults").fadeTo(200, 0.2);
-        };
-        /**
-         * Fades back to full opacity once results have been refreshed.
-         */
-        this.unObscureResults = function()
-        {
-            $("#followResults").fadeTo(250, 1);
-        };
-        /**
          * Refreshes the screen with all users in queue.
          */
         this.refreshQueue = function()
@@ -372,7 +576,7 @@ var FindToFollow = new function()
 
             //When running locally the reresh can happen so fast we don't even notice,
             //do a little animating to indicate refresh actually happened
-            FindToFollow.Follow.obscureResults();
+            FindToFollow.obscureContainer("followResults");
 
             var requestObject = new FindToFollow.FetchQueueJsonRequest();
 
@@ -382,7 +586,7 @@ var FindToFollow = new function()
                 {
 
                     response = JSON.parse(response);
-                    FindToFollow.Follow.unObscureResults();
+                    FindToFollow.unObscureContainer("followResults");
 
                     if (response.hasError)
                     {
@@ -449,7 +653,7 @@ var FindToFollow = new function()
 
 
             //Convert seconds to ms.
-            this.followIntervalTime = this.generateIntervalTime();
+            this.followIntervalTime = FindToFollow.generateIntervalTime(this.followIntervalTimeMinimum, this.followIntervalTimeMaximum);
 
 
             //Remove all from visible queue that are past the amount we are following
@@ -471,56 +675,25 @@ var FindToFollow = new function()
 
             //Start by following first user immediately, rather than waiting for first countdown.
             var firstRowId = "followPageUserRow" + this.idsToFollow[0];
-            this.showCountdownOverlay(firstRowId, 500);
+            FindToFollow.showCountdownOverlay("followPage", firstRowId, 500);
 
             this.followNextUser();
 
         };
-        /**
-         * Generates a random interval time between (followIntervalTimeMinimum and followIntervalTimeMaximum) * 1000 to get ms.
-         * @returns {number} The result in ms.
-         */
-        this.generateIntervalTime = function()
-        {
-            var random = Math.floor(Math.random() * (this.followIntervalTimeMaximum - this.followIntervalTimeMinimum + 1)) + this.followIntervalTimeMinimum;
-            return random * 1000;
-        };
-        /**
-         * Shows an overlay over the row that acts as a progress bar getting going from 100% -> 0% width in teh given timeout.
-         * @param {string} rowId The id of the row the overlay will sit on top of.
-         * @param {number} timeout The timeout in ms.
-         */
-        this.showCountdownOverlay = function(rowId, timeout)
-        {
-            var row = $("#" + rowId);
-            var top = row.position().top;
-            var left = row.position().left;
-            var width = row.width();
-            var height = row.height();
 
-            var overlayId = rowId + "Overlay";
-            var div = '<div id="' + overlayId + '" style="margin:0;z-index: 500; height: ' + height + 'px;width: ' + width + 'px;position:absolute; top: ' + top + 'px; left: ' + left + 'px; background-color: rgba(181, 255, 170,0.5);">&nbsp;</div>';
-
-            $("#followPage .rightColumn .content-block").append(div);
-            $("#" + overlayId).animate({width: 0}, timeout, "swing", function()
-            {
-                $("#" + overlayId).remove();
-            });
-
-        };
         /**
          * Called for each user that is to be followed. Starts countdown, at the end of which it will call
          * followNextUser.  Relies on followIntervalTime being set and assumes there is another user to follow.
          */
         this.startFollowInterval = function()
         {
-            this.followIntervalTime = this.generateIntervalTime();
+            this.followIntervalTime = FindToFollow.generateIntervalTime(this.followIntervalTimeMinimum, this.followIntervalTimeMaximum);
             this.followTicks = 0;
 
             var nextId = this.idsToFollow[0];
             var rowId = "followPageUserRow" + nextId;
 
-            this.showCountdownOverlay(rowId, this.followIntervalTime + 1000);
+            FindToFollow.showCountdownOverlay("followPage", rowId, this.followIntervalTime + 1000);
 
 
             var _this = this;
@@ -670,7 +843,7 @@ var FindToFollow = new function()
         var id = checkBox.val();
 
         this.setRowSelectedState(id, checkBox, !currentlyChecked);
-        this.updateSelectedCount()
+        this.updateSelectedCount();
     };
 
     /**
@@ -694,14 +867,16 @@ var FindToFollow = new function()
     };
     /**
      * Counts the number of selected rows, and updates the Follow Users button with result.
+     * @param {String=} pageId Optional pageId, that when set to false will revert to the current pageId.
      */
-    this.updateSelectedCount = function()
+    this.updateSelectedCount = function(pageId)
     {
-        var checkedCount = $("#" + this.currentPageId + " input.row-checkbox:checked").map(function()
+        pageId = pageId || this.currentPageId;
+        var checkedCount = $("#" + pageId + " input.row-checkbox:checked").map(function()
         {
             return this.value
         }).get().length;
-        $("#" + this.currentPageId + "SelectedCount").html(checkedCount);
+        $("#" + pageId + "SelectedCount").html(checkedCount);
     };
     /**
      * Both disable the button physically and visibly.
@@ -715,6 +890,57 @@ var FindToFollow = new function()
     {
         $("#" + buttonId).removeClass("disabled-button");
         $("#" + buttonId).removeAttr("disabled");
+    };
+    /**
+     * Generates a random interval time between (minimum and maximum) * 1000 to get ms.
+     * @param {Number} minimum The minimum value our interval should be, in seconds.
+     * @param {Number} maximum The maximum value our interval should be, in seconds.
+     * @returns {number} The result in ms.
+     */
+    this.generateIntervalTime = function(minimum, maximum)
+    {
+        var random = Math.floor(Math.random() * (maximum - minimum + 1)) + minimum;
+        return random * 1000;
+    };
+    /**
+     * Shows an overlay over the row that acts as a progress bar getting going from 100% -> 0% width in teh given timeout.
+     * @param {String} pageId The id of the page this overlay will be shown on.
+     * @param {string} rowId The id of the row the overlay will sit on top of.
+     * @param {number} timeout The timeout in ms.
+     */
+    this.showCountdownOverlay = function(pageId, rowId, timeout)
+    {
+        var row = $("#" + rowId);
+        var top = row.position().top;
+        var left = row.position().left;
+        var width = row.width();
+        var height = row.height();
+
+        var overlayId = rowId + "Overlay";
+        var div = '<div id="' + overlayId + '" style="margin:0;z-index: 500; height: ' + height + 'px;width: ' + width + 'px;position:absolute; top: ' + top + 'px; left: ' + left + 'px; background-color: rgba(181, 255, 170,0.5);">&nbsp;</div>';
+
+        $("#" + pageId + " .rightColumn .content-block").append(div);
+        $("#" + overlayId).animate({width: 0}, timeout, "swing", function()
+        {
+            $("#" + overlayId).remove();
+        });
+
+    };
+    /**
+     * Obscure the results, just a nice UI effect for when we are refreshing the results.
+     * @param {String} containerId Id of the container to obscure.
+     */
+    this.obscureContainer = function(containerId)
+    {
+        $("#" + containerId).fadeTo(200, 0.2);
+    };
+    /**
+     * Fades back to full opacity once results have been refreshed.
+     * @param {String} containerId Id of the container to obscure.
+     */
+    this.unObscureContainer = function(containerId)
+    {
+        $("#" + containerId).fadeTo(250, 1);
     };
 
 };
@@ -733,6 +959,15 @@ FindToFollow.FilterJsonRequest = function()
     this.friendToFollowerRatio = "";
     this.keywords = "";
     this.action = "run";
+};
+/**
+ * Request sent to backend to unfollow user.
+ * @constructor
+ */
+FindToFollow.UnFollowJsonRequest = function()
+{
+    this.toUnFollowUserId = -1;
+    this.action = "unfollow";
 };
 /**
  * Request sent to backend to follow user.
