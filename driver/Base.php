@@ -96,6 +96,20 @@ class FTF_Driver_Base
                 $onClick = 'onclick="FindToFollow.userTableRowClicked(event);"';
             }
 
+            $followInfo = '';
+            if ($pageId == "unFollowPage")
+            {
+                $dateFollowed = intval($this->userData->fetchUserFTFData($user->id, 'dateFollowed'));
+                if ($dateFollowed > 0)
+                {
+                    $followInfo = '<span class="follow-information">Followed User ' . $this->timeAgo($dateFollowed) . '</span>';
+                }
+                else
+                {
+                    $followInfo = '<span class="follow-information">No Follow Information</span>';
+                }
+            }
+
             $html = $html . '<table width="500" class="user-table" id="' . $pageId . 'UserRow' . $user->id . '" ' . $onClick . ' data-user-id="' . $user->id . '">
                 <tr>
                 <td valign="top" class="number-td">
@@ -105,7 +119,9 @@ class FTF_Driver_Base
                     <img src="' . $user->profile_image_url . '" />
                 </td>
                 <td valign="middle" class="description-td">
-                    <a href="http://www.twitter.com/' . $user->screen_name . '" target="_blank">' . $user->name . ' (@<span id="' . $pageId . 'Username' . $user->id . '">' . $user->screen_name . '</span>)</a><br />
+                    <a href="http://www.twitter.com/' . $user->screen_name . '" target="_blank">' . $user->name . ' (@<span id="' . $pageId . 'Username' . $user->id . '">' . $user->screen_name . '</span>)</a>
+                    ' . $followInfo . '
+                    <br />
                     <p>' . $user->description . '</p>
                     Friends/Following : <strong>' . $user->friends_count . '</strong> &nbsp;&nbsp;&nbsp;&nbsp; Followers: <strong>' . $user->followers_count . '</strong>
                 </td>';
@@ -128,5 +144,35 @@ class FTF_Driver_Base
             $html = 'No Results Found!';
         }
         return $html;
+    }
+
+    /**
+     * Returns in words how long ago time occurred.
+     * @param $time
+     * @return string
+     */
+    private function timeAgo($time)
+    {
+        $periods = array("second", "minute", "hour", "day", "week", "month", "year", "decade");
+        $lengths = array("60", "60", "24", "7", "4.35", "12", "10");
+
+        $now = time();
+
+        $difference = $now - intval($time);
+        $tense = "ago";
+
+        for ($j = 0; $difference >= $lengths[$j] && $j < count($lengths) - 1; $j++)
+        {
+            $difference /= $lengths[$j];
+        }
+
+        $difference = round($difference);
+
+        if ($difference != 1)
+        {
+            $periods[$j] .= "s";
+        }
+
+        return "$difference $periods[$j] ago ";
     }
 }

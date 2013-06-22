@@ -172,6 +172,51 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
     }
 
     /**
+     * Given an array of user ids, we will determine if we have their data cached, if so we will use that, otherwise we will fetch it.
+     * @param array $userIds Array of ids.
+     * @return array of user data.
+     */
+    public function fetchUserData($userIds)
+    {
+        if (!is_array($userIds) || count($userIds) < 1)
+        {
+            return array();
+        }
+
+        //Get a list of fresh and cached ids, so we don't fetch profiles for people we already have
+        $idObject = $this->breakIdsByCached($userIds);
+
+        //Get new and cached user data, and merge it so we can filter.
+        $newUsers = $this->fetchUserDataFromTwitter($idObject->freshUserIds);
+        $cachedFollowers = $this->userData->fetchCachedUsers($idObject->cachedUserIds);
+
+        return array_merge($newUsers, $cachedFollowers);
+    }
+
+    /**
+     * Fetches full user objects from twitter.
+     * @private
+     * @param $userIds array Twitter user id's to fetch data for.
+     * @return array|mixed Array of user data.
+     */
+    private function fetchUserDataFromTwitter($userIds)
+    {
+
+        $users = $this->twitterUsersLookup($userIds);
+
+        //Write new data to cache.
+        foreach ($users as $user)
+        {
+            $friend = new FTF_Friend($user);
+            $this->userData->writeUserToCache($friend);
+        }
+        $this->userData->flushUserListCache();
+
+
+        return $users;
+    }
+
+    /**
      * Call to twitter API to get full profile information for provided userIds. Note can only process 100 userIds at once.
      * @param array $userIds Array of twitter user ids.
      * @return array Of Full Twitter User objects.
@@ -214,5 +259,34 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
 
         }
         return array();
+    }
+
+    /**
+     * Given an array of twitter userids, break out the ids we already have cached locally so that we don't have to fetch them from twitter.
+     * @private
+     * @param $ids Array of twitter ids.
+     * @return Object An object with two arrays, {cachedUserIds: [], freshUserIds: []}
+     */
+    public function breakIdsByCached($ids)
+    {
+        $returnObject = (Object)array();
+        $returnObject->freshUserIds = array();
+        $returnObject->cachedUserIds = array();
+
+        foreach ($ids as $id)
+        {
+            if (in_array($id, $this->userData->cachedUserIds))
+            {
+                $returnObject->cachedUserIds[] = $id;
+            }
+            else
+            {
+                $returnObject->freshUserIds[] = $id;
+            }
+        }
+
+        $this->addLogMessage('Pulling fresh profiles for ' . count($returnObject->freshUserIds) . ' users from twitter. Had ' . count($returnObject->cachedUserIds) . ' cached.');
+
+        return $returnObject;
     }
 }

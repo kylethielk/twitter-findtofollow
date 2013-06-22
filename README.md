@@ -7,6 +7,8 @@ Written to automate the task of finding interesting and similar users that are l
 
 The selected users can then be followed automatically at random intervals generated between a specified minimum and maximum by processing the queue.
 
+We can also see a list of users that do not follow us back and automatically unfollow them at random intervals similar to how following works. 
+
 The application caches user profile information to cut down on Twitter API calls and network traffic. All caching is done on the local file system as I explicity wanted to avoid any reliance on a DB.
 
 The application also keeps track of users that you are following and those that you have followed in the past (but are no longer following) to avoid re-following. Unfortunately Twitter does not expose a service to get a list of all people you have followed in the past, so this feature only works on users you have followed and then unfollowed while using this application.
@@ -14,6 +16,8 @@ The application also keeps track of users that you are following and those that 
 ![twitter-findtofollow Screenshot](https://github.com/kylethielk/twitter-findtofollow/blob/develop/images/screenshot.png?raw=true)
 
 ![twitter-findtofollow Staggered Following Screenshot](https://github.com/kylethielk/twitter-findtofollow/blob/develop/images/screenshot-2.png?raw=true)
+
+![twitter-findtofollow Staggered UnFollowing Screenshot](https://github.com/kylethielk/twitter-findtofollow/blob/develop/images/screenshot-3.png?raw=true)
 
 Instructions
 ------------
@@ -26,6 +30,8 @@ Then simply load index.html in your browser and let the application do the rest.
 
 Updates
 -------
+
+**June 22, 2013** - Release 1.1. has been brached off. This branch contains the stable release of following and filtering. Develop branch now has unfollowing.
 
 **June 9, 2013** - Release 1.0 has been branched off. This branch contains the last code that forces following without the use of a queue. Now all filtered users are first added to a queue, and then the queue is processed independently from filtering.  Before upgrading to latest code either 
 
