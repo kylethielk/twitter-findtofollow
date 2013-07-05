@@ -826,6 +826,7 @@ var FindToFollow = new function()
                 $(this).hide();
             }
         })
+        FindToFollow.repositionCountdownOverlay(page);
     };
 
 
@@ -917,7 +918,7 @@ var FindToFollow = new function()
         var height = row.height();
 
         var overlayId = rowId + "Overlay";
-        var div = '<div id="' + overlayId + '" style="margin:0;z-index: 500; height: ' + height + 'px;width: ' + width + 'px;position:absolute; top: ' + top + 'px; left: ' + left + 'px; background-color: rgba(181, 255, 170,0.5);">&nbsp;</div>';
+        var div = '<div class="overlay-tracker" id="' + overlayId + '" style="margin:0;z-index: 500; height: ' + height + 'px;width: ' + width + 'px;position:absolute; top: ' + top + 'px; left: ' + left + 'px; background-color: rgba(181, 255, 170,0.5);">&nbsp;</div>';
 
         $("#" + pageId + " .rightColumn .content-block").append(div);
         $("#" + overlayId).animate({width: 0}, timeout, "swing", function()
@@ -925,6 +926,33 @@ var FindToFollow = new function()
             $("#" + overlayId).remove();
         });
 
+    };
+    /**
+     * If we attempt to build a countdown overlay for a page that his hidden,
+     * jquery can't properly calculate the size of the overlay so it gets set to 0.
+     *
+     * This forces the overlay to be the correct size on the page by recalculating the dimensions.
+     * @param {String} pageId The id of the page we are repositioning the overlay on.
+     */
+    this.repositionCountdownOverlay = function(pageId)
+    {
+        if (pageId != "unFollowPage" && pageId != "followPage")
+        {
+            return;
+        }
+
+        var overlay = $("#" + pageId + " .rightColumn .content-block .overlay-tracker");
+
+        if (overlay.length)
+        {
+            var row = $("#" + pageId + " .rightColumn .content-block .user-table").first();
+
+            var top = row.position().top;
+            var left = row.position().left;
+            var width = row.width();
+            var height = row.height();
+            overlay.css({height: height, top: top, left: left});
+        }
     };
     /**
      * Obscure the results, just a nice UI effect for when we are refreshing the results.
