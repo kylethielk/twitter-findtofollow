@@ -945,7 +945,7 @@ var FindToFollow = new function()
 
         if (overlay.length)
         {
-            var row = $("#" + pageId + " .rightColumn .content-block .user-table").first();
+            var row = $("#" + pageId + " .rightColumn .content-block .user-table:visible").first();
 
             var top = row.position().top;
             var left = row.position().left;
