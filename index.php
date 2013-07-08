@@ -12,7 +12,7 @@ else
 
     $user = FTF_TwitterAuthenticate::loggedInUser();
 
-    if (!isset($user))
+    if (!isset($user) && !FTF_TwitterAuthenticate::$skipRedirect)
     {
         FTF_TwitterAuthenticate::redirectToLogin();
     }
@@ -38,7 +38,7 @@ else
     <img src="<?php echo $user->profileImageUrl; ?>"/>
     <span id="twitterUsername"><a href="https://www.twitter.com/<?php echo $user->twitterUsername; ?>"
                                   target="_blank"><?php echo $user->twitterUsername; ?></a></span>
-    <span id="twitterSwitchUser"><a href="javascript:void(0);">(Switch User)</a></span>
+    <span id="twitterSwitchUser"><a href="javascript:void(0);" onclick="FindToFollow.Authenticate.switchUser();">(Switch User)</a></span>
 </div>
 <ul class="tab-wrapper">
     <li id="helpPageTab" onclick="FindToFollow.changePage('helpPage');">Help</li>

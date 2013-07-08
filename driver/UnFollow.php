@@ -51,24 +51,12 @@ class FTF_Driver_UnFollow extends FTF_Driver_Twitter
      */
     public function unFollowUser()
     {
-        //Reset api exchange
-        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
+        $twitterOAuth = new TwitterOAuth(FTF_Config::$apiKeys['consumer_key'],
+            FTF_Config::$apiKeys['consumer_secret'],
+            FTF_UserData::getUserData()->currentUser()->oauthToken,
+            FTF_UserData::getUserData()->currentUser()->oauthSecret);
 
-        //Build and send request to twitter api.
-        $url = 'https://api.twitter.com/1.1/friendships/destroy.json';
-
-        $postFields = array(
-            'user_id' => $this->unFollowRequest->toUnFollowUserId,
-        );
-
-        $requestMethod = 'POST';
-
-        $response = $this->twitterApi
-            ->setPostfields($postFields)
-            ->buildOauth($url, $requestMethod)
-            ->performRequest();
-
-        $response = json_decode($response);
+        $response = $twitterOAuth->post('friendships/destroy', array('user_id' => $this->unFollowRequest->toUnFollowUserId));
 
         $errorMessage = $this->checkForTwitterErrors($response);
 
@@ -81,7 +69,7 @@ class FTF_Driver_UnFollow extends FTF_Driver_Twitter
         else
         {
             //We successfully unfollowed user, set unfollow date.
-            $this->userData->updateUserData($this->unFollowRequest->toUnFollowUserId, -1, time());
+            FTF_UserData::getUserData()->updateUserData($this->unFollowRequest->toUnFollowUserId, -1, time());
             //Update follow date
             FTF_Web::writeValidResponse("", $this->generateLog());
         }
@@ -96,8 +84,8 @@ class FTF_Driver_UnFollow extends FTF_Driver_Twitter
     public function generateHtmlForUsers()
     {
         //Get list of users we current follow
-        $friendIds = $this->twitterFriendsIds($this->twitterUsername);
-        $followerIds = $this->twitterFollowersIds($this->twitterUsername);
+        $friendIds = $this->twitterFriendsIds(FTF_UserData::getUserData()->currentUser()->twitterUsername);
+        $followerIds = $this->twitterFollowersIds(FTF_UserData::getUserData()->currentUser()->twitterUsername);
 
         $nonFollowerIds = array_diff($friendIds, $followerIds);
 

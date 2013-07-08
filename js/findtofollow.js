@@ -776,6 +776,23 @@ var FindToFollow = new function()
 
         };
     };
+    this.Authenticate = new function()
+    {
+        this.switchUser = function()
+        {
+            var requestObject = new FindToFollow.SwitchUserJsonRequest();
+
+            $.post("FindToFollow.php", requestObject)
+                .done(function(response)
+                {
+                    location.reload();
+                })
+                .fail(function()
+                {
+                    FindToFollow.showErrorMessage("An unexpected error occurred during the request.");
+                });
+        };
+    };
 
     /**
      * The HTML Id of the current visible page.
@@ -1026,6 +1043,10 @@ FindToFollow.FetchQueueJsonRequest = function()
 FindToFollow.FetchUnFollowUserJsonRequest = function()
 {
     this.action = "fetchunfollowusers";
+};
+FindToFollow.SwitchUserJsonRequest = function()
+{
+    this.action = "switchuser";
 };
 
 $(document).ready(function()

@@ -52,24 +52,13 @@ class FTF_Driver_Follow extends FTF_Driver_Twitter
      */
     public function followUser()
     {
-        //Reset api exchange
-        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
+        $twitterOAuth = new TwitterOAuth(FTF_Config::$apiKeys['consumer_key'],
+            FTF_Config::$apiKeys['consumer_secret'],
+            FTF_UserData::getUserData()->currentUser()->oauthToken,
+            FTF_UserData::getUserData()->currentUser()->oauthSecret);
 
-        //Build and send request to twitter api.
-        $url = 'https://api.twitter.com/1.1/friendships/create.json';
+        $response = $twitterOAuth->post('friendships/create', array('user_id' => $this->followRequest->toFollowUserId));
 
-        $postFields = array(
-            'user_id' => $this->followRequest->toFollowUserId,
-        );
-
-        $requestMethod = 'POST';
-
-        $response = $this->twitterApi
-            ->setPostfields($postFields)
-            ->buildOauth($url, $requestMethod)
-            ->performRequest();
-
-        $response = json_decode($response);
 
         $errorMessage = $this->checkForTwitterErrors($response);
 
@@ -82,10 +71,10 @@ class FTF_Driver_Follow extends FTF_Driver_Twitter
         else
         {
             //We successfully followed user, add them to our list.
-            $this->userData->mergeInFriendIds(array($this->followRequest->toFollowUserId));
-            $this->userData->removeUserIdFromQueue($this->followRequest->toFollowUserId);
-            $this->userData->flushPrimaryUserData();
-            $this->userData->updateUserData($this->followRequest->toFollowUserId, time());
+            FTF_UserData::getUserData()->mergeInFriendIds(array($this->followRequest->toFollowUserId));
+            FTF_UserData::getUserData()->removeUserIdFromQueue($this->followRequest->toFollowUserId);
+            FTF_UserData::getUserData()->flushPrimaryUserData();
+            FTF_UserData::getUserData()->updateUserData($this->followRequest->toFollowUserId, time());
             //Update follow date
             FTF_Web::writeValidResponse("", $this->generateLog());
         }

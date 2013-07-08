@@ -57,13 +57,11 @@ class FTF_Driver_Filter extends FTF_Driver_Twitter
      */
     public function __construct($apiKeys, $filterRequest)
     {
-        parent::__construct($apiKeys, FTF_Config::$twitterUsername);
+        parent::__construct($apiKeys);
 
         $this->filterRequest = $filterRequest;
         $this->timer = new timer;
         $this->timer->set_output(2);
-
-
     }
 
     /**
@@ -71,12 +69,12 @@ class FTF_Driver_Filter extends FTF_Driver_Twitter
      */
     public function buildFriendIds()
     {
-        $friendIds = $this->twitterFriendsIds($this->twitterUsername);
+        $friendIds = $this->twitterFriendsIds(FTF_UserData::getUserData()->currentUser()->twitterUsername);
 
         $this->addLogMessage('You have ' . ($friendIds ? count($friendIds) : 0) . ' friends according to twitter.');
 
-        $this->userData->mergeInFriendIds($friendIds);
-        $this->userData->flushPrimaryUserData();
+        FTF_UserData::getUserData()->mergeInFriendIds($friendIds);
+        FTF_UserData::getUserData()->flushPrimaryUserData();
     }
 
     /**
@@ -95,7 +93,7 @@ class FTF_Driver_Filter extends FTF_Driver_Twitter
     public function removeUsersAlreadyFollowed()
     {
         $before_remove_count = count($this->potentialFriendIds);
-        $this->potentialFriendIds = array_diff($this->potentialFriendIds, $this->userData->friendIds);
+        $this->potentialFriendIds = array_diff($this->potentialFriendIds, FTF_UserData::getUserData()->friendIds);
         $after_remove_count = count($this->potentialFriendIds);
 
         $this->addLogMessage('Removed a total of ' . ($before_remove_count - $after_remove_count) . ' people because you are already following them.');
@@ -104,7 +102,7 @@ class FTF_Driver_Filter extends FTF_Driver_Twitter
     public function removeUsersInQueue()
     {
         $before_remove_count = count($this->potentialFriendIds);
-        $this->potentialFriendIds = array_diff($this->potentialFriendIds, $this->userData->queuedUserIds);
+        $this->potentialFriendIds = array_diff($this->potentialFriendIds, FTF_UserData::getUserData()->queuedUserIds);
         $after_remove_count = count($this->potentialFriendIds);
 
         $this->addLogMessage('Removed a total of ' . ($before_remove_count - $after_remove_count) . ' people because you have them in your queue.');

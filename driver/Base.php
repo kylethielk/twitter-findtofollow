@@ -30,27 +30,15 @@ require_once(dirname(__FILE__) . '/../UserData.php');
 class FTF_Driver_Base
 {
     /**
-     * @var string
-     */
-    protected $twitterUsername;
-
-    /**
-     * @var FTF_UserData
-     */
-    protected $userData;
-    /**
      * @var array Log Messages.
      */
     private $logArray = array();
 
     /**
      * Initialize this driver.
-     * @param string $twitterUsername The username for who we are running this app for.
      */
-    public function __construct($twitterUsername)
+    public function __construct()
     {
-        $this->twitterUsername = $twitterUsername;
-        $this->userData = new FTF_UserData($twitterUsername);
     }
 
 
@@ -99,7 +87,7 @@ class FTF_Driver_Base
             $followInfo = '';
             if ($pageId == "unFollowPage")
             {
-                $dateFollowed = intval($this->userData->fetchUserFTFData($user->id, 'dateFollowed'));
+                $dateFollowed = intval(FTF_UserData::getUserData()->fetchUserFTFData($user->id, 'dateFollowed'));
                 if ($dateFollowed > 0)
                 {
                     $followInfo = '<span class="follow-information">Followed User ' . $this->timeAgo($dateFollowed) . '</span>';

@@ -29,26 +29,14 @@ require_once(dirname(__FILE__) . '/Base.php');
  */
 class FTF_Driver_Twitter extends FTF_Driver_Base
 {
-    /**
-     * @var array Associative Array of Twitter OAuth Keys.
-     */
-    protected $apiKeys;
-    /**
-     * @var TwitterAPIExchange
-     */
-    protected $twitterApi;
+
 
     /**
      * Initialize this driver.
-     * @param array $apiKeys Our twitter api keys.
-     * @param string $twitterUsername The username for who we are running this app for.
      */
-    public function __construct($apiKeys, $twitterUsername)
+    public function __construct()
     {
-        parent::__construct($twitterUsername);
-
-        $this->apiKeys = $apiKeys;
-        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
+        parent::__construct();
 
 
     }
@@ -83,21 +71,15 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
      */
     public function twitterFriendsIds($username, $cursor = -1)
     {
-        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
-        $url = 'https://api.twitter.com/1.1/friends/ids.json';
+        $twitterOAuth = new TwitterOAuth(FTF_Config::$apiKeys['consumer_key'],
+            FTF_Config::$apiKeys['consumer_secret'],
+            FTF_UserData::getUserData()->currentUser()->oauthToken,
+            FTF_UserData::getUserData()->currentUser()->oauthSecret);
 
-        $getField = '?cursor=' . $cursor . '&screen_name=' . $username . '&count=5000';
-        $requestMethod = 'GET';
-
-        $response = $this->twitterApi
-            ->setGetfield($getField)
-            ->buildOauth($url, $requestMethod)
-            ->performRequest();
-
-        $response = json_decode($response);
+        $response = $twitterOAuth->get('friends/ids', array('cursor' => $cursor, 'screen_name' => $username, 'count' => 5000));
 
         $errorMessage = $this->checkForTwitterErrors($response);
-        if ($errorMessage === false)
+        if ($errorMessage === false && isset($response))
         {
 
             if ($response->next_cursor > 0)
@@ -139,16 +121,13 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
 
         $count = $maximum > 5000 ? 5000 : $maximum;
 
-        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
+        $twitterOAuth = new TwitterOAuth(FTF_Config::$apiKeys['consumer_key'],
+            FTF_Config::$apiKeys['consumer_secret'],
+            FTF_UserData::getUserData()->currentUser()->oauthToken,
+            FTF_UserData::getUserData()->currentUser()->oauthSecret);
 
-        $url = 'https://api.twitter.com/1.1/followers/ids.json';
-        $getField = '?cursor=' . $cursor . '&screen_name=' . $username . '&count=' . $count;
-        $requestMethod = 'GET';
+        $response = $twitterOAuth->get('followers/ids', array('cursor' => $cursor, 'screen_name' => $username, 'count' => $count));
 
-        $response = json_decode($this->twitterApi
-            ->setGetfield($getField)
-            ->buildOauth($url, $requestMethod)
-            ->performRequest());
 
         $errorMessage = $this->checkForTwitterErrors($response);
         if ($errorMessage === false)
@@ -188,7 +167,7 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
 
         //Get new and cached user data, and merge it so we can filter.
         $newUsers = $this->fetchUserDataFromTwitter($idObject->freshUserIds);
-        $cachedFollowers = $this->userData->fetchCachedUsers($idObject->cachedUserIds);
+        $cachedFollowers = FTF_UserData::getUserData()->fetchCachedUsers($idObject->cachedUserIds);
 
         return array_merge($newUsers, $cachedFollowers);
     }
@@ -208,9 +187,9 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
         foreach ($users as $user)
         {
             $friend = new FTF_Friend($user);
-            $this->userData->writeUserToCache($friend);
+            FTF_UserData::getUserData()->writeUserToCache($friend);
         }
-        $this->userData->flushUserListCache();
+        FTF_UserData::getUserData()->flushUserListCache();
 
 
         return $users;
@@ -224,26 +203,18 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
     public function twitterUsersLookup($userIds)
     {
 
-        $this->twitterApi = new TwitterAPIExchange($this->apiKeys);
-
-        $url = 'https://api.twitter.com/1.1/users/lookup.json';
-        $requestMethod = 'POST';
-
         if ($userIds && count($userIds) > 0)
         {
             $idString = implode(',', $userIds);
 
-            $postfields = array(
-                'user_id' => $idString,
-            );
 
+            $twitterOAuth = new TwitterOAuth(FTF_Config::$apiKeys['consumer_key'],
+                FTF_Config::$apiKeys['consumer_secret'],
+                FTF_UserData::getUserData()->currentUser()->oauthToken,
+                FTF_UserData::getUserData()->currentUser()->oauthSecret);
 
-            $response = $this->twitterApi
-                ->setPostfields($postfields)
-                ->buildOauth($url, $requestMethod)
-                ->performRequest();
+            $users = $twitterOAuth->post('users/lookup', array('user_id' => $idString));
 
-            $users = json_decode($response);
 
             $errorMessage = $this->checkForTwitterErrors($users);
             if ($errorMessage === false)
@@ -275,7 +246,7 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
 
         foreach ($ids as $id)
         {
-            if (in_array($id, $this->userData->cachedUserIds))
+            if (in_array($id, FTF_UserData::getUserData()->cachedUserIds))
             {
                 $returnObject->cachedUserIds[] = $id;
             }

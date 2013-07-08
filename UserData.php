@@ -52,6 +52,11 @@ class FTF_UserData
      */
     public $queuedUserIds;
 
+    /**
+     * @var FTF_UserData
+     */
+    private static $me;
+
 
     public function FTF_UserData()
     {
@@ -63,6 +68,15 @@ class FTF_UserData
             $this->initializeCachedUserIdList();
             $this->initializePrimaryUserData();
         }
+    }
+
+    public static function getUserData()
+    {
+        if (!isset(FTF_UserData::$me))
+        {
+            FTF_UserData::$me = new FTF_UserData();
+        }
+        return FTF_UserData::$me;
     }
 
     /**
@@ -462,6 +476,22 @@ class FTF_UserData
         fclose($filePointer);
 
         $this->currentUser = $currentUser;
+    }
+
+    /**
+     * Clear current user data so that the next reload of the page will force a new twitter auth action.
+     */
+    public function clearCurrentUser()
+    {
+        $filename = './userdata/findtofollow.json';
+
+        $filePointer = fopen($filename, 'w');
+
+        fwrite($filePointer, '{"currentUser":null}');
+        fclose($filePointer);
+
+        $this->currentUser = null;
+
     }
 
 

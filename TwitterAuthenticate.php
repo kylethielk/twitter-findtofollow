@@ -34,6 +34,8 @@ class FTF_TwitterAuthenticate
 {
     const FINALIZE_OAUTH = "Twitter_FinalizeOAuth";
 
+    static public $skipRedirect = false;
+
     /**
      * Process any request do's.
      */
@@ -44,6 +46,7 @@ class FTF_TwitterAuthenticate
         if ($do == FTF_TwitterAuthenticate::FINALIZE_OAUTH)
         {
             FTF_TwitterAuthenticate::finalizeOAuth();
+            FTF_TwitterAuthenticate::$skipRedirect = true;
         }
 
     }
@@ -54,8 +57,7 @@ class FTF_TwitterAuthenticate
      */
     static function loggedInUser()
     {
-        $userData = new FTF_UserData();
-        return $userData->currentUser();
+        return FTF_UserData::getUserData()->currentUser();
     }
 
     /**
@@ -94,10 +96,16 @@ class FTF_TwitterAuthenticate
      */
     static function buildOAuthRedirectUrl()
     {
+
+        return FTF_TwitterAuthenticate::buildFullUrl() . '?do=' . FTF_TwitterAuthenticate::FINALIZE_OAUTH;
+    }
+
+    static function buildFullUrl()
+    {
         $s = empty($_SERVER['HTTPS']) ? '' : ($_SERVER['HTTPS'] == 'on') ? 's' : '';
         $protocol = substr(strtolower($_SERVER['SERVER_PROTOCOL']), 0, strpos(strtolower($_SERVER['SERVER_PROTOCOL']), '/')) . $s;
         $port = ($_SERVER['SERVER_PORT'] == '80') ? '' : (":" . $_SERVER['SERVER_PORT']);
-        return $protocol . "://" . $_SERVER['HTTP_HOST'] . $port . $_SERVER['REQUEST_URI'] . '?do=' . FTF_TwitterAuthenticate::FINALIZE_OAUTH;
+        return strtok($protocol . "://" . $_SERVER['HTTP_HOST'] . $port . $_SERVER['REQUEST_URI'],'?');
     }
 
     /**
@@ -129,14 +137,14 @@ class FTF_TwitterAuthenticate
             }
             else
             {
-
-                $userData = new FTF_UserData();
                 $user = new FTF_TwitterUser($twitterUser->screen_name,
                     $accessToken['oauth_token'],
                     $accessToken['oauth_token_secret'],
                     $twitterUser->profile_image_url,
                     $twitterUser->description);
-                $userData->setCurrentUser($user);
+                FTF_UserData::getUserData()->setCurrentUser($user);
+
+                header("Location: " . FTF_TwitterAuthenticate::buildFullUrl());
 
             }
         }

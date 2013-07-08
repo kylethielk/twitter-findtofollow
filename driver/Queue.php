@@ -55,9 +55,9 @@ class FTF_Driver_Queue extends FTF_Driver_Base
             trigger_error("Invalid request passed for addUserIdsToQueue.", E_USER_ERROR);
         }
 
-        $this->userData = new FTF_UserData($this->twitterUsername);
-        $this->userData->mergeInUserIdsToQueue($this->queueRequest->queuedUserIds);
-        $this->userData->flushPrimaryUserData();
+
+        FTF_UserData::getUserData()->mergeInUserIdsToQueue($this->queueRequest->queuedUserIds);
+        FTF_UserData::getUserData()->flushPrimaryUserData();
     }
 
     /**
@@ -66,11 +66,11 @@ class FTF_Driver_Queue extends FTF_Driver_Base
      */
     public function generateHtmlForQueue()
     {
-        $users = $this->userData->fetchCachedUsers($this->userData->queuedUserIds);
+        $users = FTF_UserData::getUserData()->fetchCachedUsers(FTF_UserData::getUserData()->queuedUserIds);
 
         $html = '<h1>Users in Queue</h1>';
 
-        $html .= $this->generateUserTablesHtml($users, 'followPage',true);
+        $html .= $this->generateUserTablesHtml($users, 'followPage', true);
         return $html;
     }
 

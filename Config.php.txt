@@ -26,8 +26,6 @@ class FTF_Config
 {
     static public $twitterUsername = "CHANGE_THIS";
     static public $apiKeys = array(
-        'oauth_access_token' => 'CHANGE_THIS',
-        'oauth_access_token_secret' => 'CHANGE_THIS',
         'consumer_key' => 'CHANGE_THIS',
         'consumer_secret' => 'CHANGE_THIS'
     );

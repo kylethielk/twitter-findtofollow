@@ -47,6 +47,7 @@ class FTF_Web
     const ACTION_ADD_QUEUE = 'addqueue';
     const ACTION_FETCH_QUEUE = 'fetchqueue';
     const ACTION_FETCH_USERS_TO_UNFOLLOW = 'fetchunfollowusers';
+    const ACTION_SWITCH_USER = 'switchuser';
 
     /**
      * @var FTF_Driver_Base
@@ -66,6 +67,10 @@ class FTF_Web
         else if (!FTF_Web::validateConfig())
         {
             FTF_Web::writeErrorResponse("Config.php has not been setup or configured properly.");
+        }
+        else if (!FTF_Web::validateAuthenticated())
+        {
+            FTF_Web::writeErrorResponse("No user currently authorized to run application. Something went very wrong.");
         }
 
         $action = $data['action'];
@@ -94,6 +99,16 @@ class FTF_Web
         {
             FTF_Web::fetchUnFollowUsers();
         }
+        else if ($action == FTF_Web::ACTION_SWITCH_USER)
+        {
+            FTF_Web::switchUser();
+        }
+    }
+
+    public static function switchUser()
+    {
+        FTF_UserData::getUserData()->clearCurrentUser();
+        FTF_Web::writeValidResponse("", "");
     }
 
     /**
@@ -288,9 +303,7 @@ class FTF_Web
         {
             return false;
         }
-        else if (FTF_Config::$apiKeys['oauth_access_token'] == 'CHANGE_THIS'
-            || FTF_Config::$apiKeys['oauth_access_token_secret'] == 'CHANGE_THIS'
-            || FTF_Config::$apiKeys['consumer_key'] == 'CHANGE_THIS'
+        else if (FTF_Config::$apiKeys['consumer_key'] == 'CHANGE_THIS'
             || FTF_Config::$apiKeys['consumer_secret'] == 'CHANGE_THIS'
         )
         {
@@ -299,6 +312,11 @@ class FTF_Web
 
         return true;
 
+    }
+
+    public static function validateAuthenticated()
+    {
+        return FTF_TwitterUser::validateUser(FTF_UserData::getUserData()->currentUser());
     }
 
 }

@@ -23,7 +23,7 @@
  */
 
 require_once(dirname(__FILE__) . '/lib/timer.php');
-require_once(dirname(__FILE__) . '/lib/TwitterAPIExchange.php');
+require_once(dirname(__FILE__) . '/twitteroauth/twitteroauth.php');
 require_once(dirname(__FILE__) . '/Config.php');
 require_once(dirname(__FILE__) . '/Web.php');
 
