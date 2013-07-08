@@ -792,6 +792,17 @@ var FindToFollow = new function()
                     FindToFollow.showErrorMessage("An unexpected error occurred during the request.");
                 });
         };
+        this.toggleSwitchUserWarning = function(show)
+        {
+            if (show)
+            {
+                $(".switch-user-warning").show();
+            }
+            else
+            {
+                $(".switch-user-warning").hide();
+            }
+        };
     };
 
     /**

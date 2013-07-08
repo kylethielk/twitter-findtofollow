@@ -86,7 +86,6 @@ class FTF_TwitterAuthenticate
         }
         else
         {
-            //TODO: BETTER ERROR HANDLING AND MESSAGE
             die("There was an error authorizing you via Twitter, please try again.");
         }
     }

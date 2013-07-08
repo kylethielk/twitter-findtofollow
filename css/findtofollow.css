@@ -334,21 +334,26 @@ input {
     text-align: center;
     margin: 0;
 }
+
 #refreshQueueBtn {
     position: absolute;
     top: 32px;
     right: 8px;
 }
+
 #followResults {
     margin-top: 40px;
 }
+
 #followResults h1 {
     margin-top: -30px;
 }
+
 .follow-information {
     color: #a3a3a3;
     float: right;
 }
+
 .user-profile {
     position: absolute;
     top: 6px;
@@ -360,24 +365,56 @@ input {
     margin: 0;
     border-radius: 5px;
 }
+
 .user-profile img {
     height: 38px;
     margin-top: 5px;
     margin-left: 5px;
     border-radius: 5px;
 }
-.user-profile #twitterUsername{
+
+.user-profile #twitterUsername {
     position: absolute;
     top: 2px;
     left: 55px;
 }
-.user-profile #twitterSwitchUser{
+
+.user-profile #twitterSwitchUser {
     color: #707070;
     position: absolute;
     top: 25px;
     left: 55px;
     font-size: 10px;
 }
+
 .user-profile #twitterSwitchUser a {
     color: #b0b0b0;
+}
+
+.switch-user-warning {
+    position: absolute;
+    top: 7px;
+    left: 170px;
+    width: 420px;
+    height: 42px;
+    border: 1px solid #CCC;
+    margin: 0;
+    border-radius: 5px;
+    font-size: 11px;
+    padding: 7px;
+    color: #7A0000;
+    background: #FFF;
+}
+
+.switch-user-warning span {
+    position: absolute;
+    right: 15px;
+    bottom: 16px;
+}
+.switch-user-warning #cancelLink {
+    font-size: 10px;
+    margin-right: 10px;
+}
+.switch-user-warning #switchLink {
+    margin-left: 10px;
 }
