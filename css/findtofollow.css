@@ -66,7 +66,7 @@ div {
     border-style: solid;
     border-color: #CCC;
     border-bottom-left-radius: 5px;
-    border-top-left-radius: 5px;
+    border-top-left-radius: 0;
 }
 
 .leftColumn .content-block {
@@ -348,4 +348,36 @@ input {
 .follow-information {
     color: #a3a3a3;
     float: right;
+}
+.user-profile {
+    position: absolute;
+    top: 6px;
+    left: 0;
+    width: 164px;
+    height: 49px;
+    background: #FFF;
+    border: 1px solid #CCC;
+    margin: 0;
+    border-radius: 5px;
+}
+.user-profile img {
+    height: 38px;
+    margin-top: 5px;
+    margin-left: 5px;
+    border-radius: 5px;
+}
+.user-profile #twitterUsername{
+    position: absolute;
+    top: 2px;
+    left: 55px;
+}
+.user-profile #twitterSwitchUser{
+    color: #707070;
+    position: absolute;
+    top: 25px;
+    left: 55px;
+    font-size: 10px;
+}
+.user-profile #twitterSwitchUser a {
+    color: #8a0000;
 }

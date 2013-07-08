@@ -58,7 +58,7 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
      * @param $response Object The response object received from Twitter that contains errors.
      * @return String the error messages.
      */
-    public function checkForTwitterErrors($response)
+    public static function checkForTwitterErrors($response)
     {
         if ($response && isset($response->errors))
         {

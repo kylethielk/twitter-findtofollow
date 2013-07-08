@@ -23,7 +23,7 @@
  */
 
 require_once(dirname(__FILE__) . '/Friend.php');
-
+require_once(dirname(__FILE__) . '/TwitterUser.php');
 /**
  * Class with functions to write/read from our cached data.
  * Class FTF_UserData
@@ -31,9 +31,9 @@ require_once(dirname(__FILE__) . '/Friend.php');
 class FTF_UserData
 {
     /**
-     * @var String Username of person we are running app for.
+     * @var FTF_TwitterUser Current user we are running application for.
      */
-    private $twitterUsername;
+    private $currentUser;
     /**
      * List of user id's we have in our cache.
      * @var
@@ -53,12 +53,78 @@ class FTF_UserData
     public $queuedUserIds;
 
 
-    public function FTF_UserData($twitterUsername)
+    public function FTF_UserData()
     {
-        $this->twitterUsername = $twitterUsername;
-        $this->initializeUserDataDirectory();
-        $this->initializeCachedUserIdList();
-        $this->initializePrimaryUserData();
+        $this->initializeApplicationSettings();
+
+        if (isset($this->currentUser))
+        {
+            $this->initializeUserDataDirectory();
+            $this->initializeCachedUserIdList();
+            $this->initializePrimaryUserData();
+        }
+    }
+
+    /**
+     * Loads the application settings (which is only the current user) right now.
+     */
+    private function initializeApplicationSettings()
+    {
+        $filename = './userdata/findtofollow.json';
+
+        if (file_exists($filename) === false)
+        {
+            //Write blank file to keep track of user's we are following
+            $filePointer = fopen($filename, 'w');
+
+            fwrite($filePointer, '{"currentUser":null}');
+            fclose($filePointer);
+
+            $this->currentUser = null;
+        }
+        else
+        {
+            $filePointer = fopen($filename, 'r');
+            $read = fread($filePointer, filesize($filename));
+            fclose($filePointer);
+
+            $readObject = json_decode($read);
+
+            $this->currentUser = new FTF_TwitterUser();
+
+            if (isset($readObject->currentUser->twitterUsername))
+            {
+                $this->currentUser->twitterUsername = $readObject->currentUser->twitterUsername;
+            }
+
+
+            if (isset($readObject->currentUser->oauthToken))
+            {
+                $this->currentUser->oauthToken = $readObject->currentUser->oauthToken;
+            }
+
+            if (isset($readObject->currentUser->oauthSecret))
+            {
+                $this->currentUser->oauthSecret = $readObject->currentUser->oauthSecret;
+            }
+
+            if (isset($readObject->currentUser->profileImageUrl))
+            {
+                $this->currentUser->profileImageUrl = $readObject->currentUser->profileImageUrl;
+            }
+            if (isset($readObject->currentUser->profileDescription))
+            {
+                $this->currentUser->profileDescription = $readObject->currentUser->profileDescription;
+            }
+
+            //If invalid user, set to null
+            if (!FTF_TwitterUser::validateUser($this->currentUser))
+            {
+                $this->currentUser = null;
+            }
+
+
+        }
     }
 
     /**
@@ -67,7 +133,7 @@ class FTF_UserData
      */
     private function initializePrimaryUserData()
     {
-        $primaryFileName = './userdata/' . $this->twitterUsername . '.json';
+        $primaryFileName = './userdata/' . $this->currentUser->twitterUsername . '.json';
         if (file_exists($primaryFileName) === false)
         {
             //Write blank file to keep track of user's we are following
@@ -216,7 +282,7 @@ class FTF_UserData
      */
     public function flushPrimaryUserData()
     {
-        $primaryFileName = './userdata/' . $this->twitterUsername . '.json';
+        $primaryFileName = './userdata/' . $this->currentUser->twitterUsername . '.json';
 
         if (!isset($this->friendIds))
         {
@@ -329,13 +395,13 @@ class FTF_UserData
         $userObject = json_decode($data);
 
         $changeMade = false;
-        if ( is_numeric($dateFollowed) && $dateFollowed > 0)
+        if (is_numeric($dateFollowed) && $dateFollowed > 0)
         {
             FTF_Web::$currentDriver->addLogMessage("Setting DateFollowed to: " . $dateFollowed);
             $userObject->dateFollowed = $dateFollowed;
             $changeMade = true;
         }
-        if (is_numeric($dateUnfollowed) && $dateUnfollowed > 0 )
+        if (is_numeric($dateUnfollowed) && $dateUnfollowed > 0)
         {
             FTF_Web::$currentDriver->addLogMessage("Setting DateUnfollowed to: " . $dateUnfollowed);
             $userObject->dateUnfollowed = $dateUnfollowed;
@@ -361,9 +427,44 @@ class FTF_UserData
             fwrite($filePointer, json_encode($userObject));
             fclose($filePointer);
         }
-
-
     }
+
+    /**
+     * Get the current user, or null if no curent user.
+     * @return FTF_TwitterUser
+     */
+    public function currentUser()
+    {
+        if (!isset($this->currentUser))
+        {
+            return null;
+        }
+
+        return $this->currentUser;
+    }
+
+    /**
+     * Sets curent user will write to file and update in memory.
+     * @param FTF_TwitterUser $currentUser
+     */
+    public function setCurrentUser($currentUser)
+    {
+        if (!FTF_TwitterUser::validateUser($currentUser))
+        {
+            return;
+        }
+
+        $filename = './userdata/findtofollow.json';
+
+        $filePointer = fopen($filename, 'w');
+
+        fwrite($filePointer, '{"currentUser":' . json_encode($currentUser) . '}');
+        fclose($filePointer);
+
+        $this->currentUser = $currentUser;
+    }
+
+
 }
 
 ?>
