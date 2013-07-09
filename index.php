@@ -213,6 +213,9 @@ else
         find.
     </p>
 
+    <p>You must first authorize the application with your twitter username. It is possible to run this tool with
+        unlimited users, however only one at a time currently.</p>
+
     <h2>To Find Potential Followers</h2>
 
     <p>At a minimum enter your twitter username (must be the twitter username that is linked to your API Keys), the

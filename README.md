@@ -26,10 +26,12 @@ Assuming you have a server capable of running php, the only non-standard require
 
 Rename **Config.php.txt** to **Config.php**. Then add your Twitter API keys and your twitter username into Config.php. Note your api keys must have read/write access.
 
-Then simply load index.html in your browser and let the application do the rest.
+Then simply load index.php in your browser, authorize via twitter and let the application do the rest.
 
 Updates
 -------
+
+**July 9, 2013** - Release 1.5.0 has been branched off. This branch has following/unfollowing/filtering and is the last release that uses application only auth.
 
 **June 22, 2013** - Release 1.1. has been brached off. This branch contains the stable release of following and filtering. Develop branch now has unfollowing.
 
@@ -47,12 +49,12 @@ Highly recommended to backup your userdata directory during any upgrade, just in
 Limitations
 -----------
 
-This first pass is fully functional but is void of error checking. So far it has only been used for personal use on a local webserver so is lacking in basic security checks, input validation  etc..
+Still a work in progress, backup your <username>.json occasionally just in case.
 
 Credit
 ------
 
-Extensive use of TwitterApiExchange library from James Mallison. Code found [here](http://github.com/j7mbo/twitter-api-php).
+Extensive use of TwitterOAuth library from [Abraham Willams](http://abrah.am).
 
 For tracking performance of API calls the timer library from David Zoli is used. Code [here](https://github.com/davidzoli/php-timer-class).
 
