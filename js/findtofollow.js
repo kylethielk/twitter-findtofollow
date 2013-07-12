@@ -810,6 +810,7 @@ var FindToFollow = new function()
      * @type {string}
      */
     this.currentPageId = "filterPage";
+    this.lastClickedTable = null;
 
     /**
      * Show global error message.
@@ -853,7 +854,8 @@ var FindToFollow = new function()
                 $("#" + $(this).attr("id") + "Tab").removeClass("tab-selected");
                 $(this).hide();
             }
-        })
+        });
+        FindToFollow.lastClickedTable = null;
         FindToFollow.repositionCountdownOverlay(page);
     };
 
@@ -869,10 +871,35 @@ var FindToFollow = new function()
         var checkBox = table.find("#checked");
 
         var currentlyChecked = srcElement.is(":checkbox") ? !checkBox.is(":checked") : checkBox.is(":checked");
+
         var id = checkBox.val();
 
-        this.setRowSelectedState(id, checkBox, !currentlyChecked);
-        this.updateSelectedCount();
+        //Change state of clicked row.
+        FindToFollow.setRowSelectedState(id, checkBox, !currentlyChecked);
+
+
+        if (event.shiftKey && FindToFollow.lastClickedTable)
+        {
+            //Shift click, select or unselect multiple rows.
+            var maximum = Math.max(FindToFollow.lastClickedTable.data('count'), table.data('count'));
+            var minimum = Math.min(FindToFollow.lastClickedTable.data('count'), table.data('count'));
+
+            $("#" + this.currentPageId).find(".user-table").each(function()
+            {
+                var userTable = $(this);
+                var count = userTable.data("count");
+
+                if (count >= minimum && count <= maximum && userTable.attr('id') != table.attr('id'))
+                {
+                    var userTableCheckBox = userTable.find("#checked");
+                    FindToFollow.setRowSelectedState(userTableCheckBox.val(), userTableCheckBox, !currentlyChecked);
+                }
+            });
+
+        }
+
+        FindToFollow.updateSelectedCount();
+        FindToFollow.lastClickedTable = table;
     };
 
     /**

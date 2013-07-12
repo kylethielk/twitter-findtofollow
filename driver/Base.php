@@ -98,7 +98,7 @@ class FTF_Driver_Base
                 }
             }
 
-            $html = $html . '<table width="500" class="user-table" id="' . $pageId . 'UserRow' . $user->id . '" ' . $onClick . ' data-user-id="' . $user->id . '">
+            $html = $html . '<table width="500" class="user-table" id="' . $pageId . 'UserRow' . $user->id . '" ' . $onClick . ' data-user-id="' . $user->id . '" data-count="' . $counter . '">
                 <tr>
                 <td valign="top" class="number-td">
                     ' . $counter . '.
