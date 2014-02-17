@@ -63,12 +63,10 @@ class FTF_Web
         if (!isset($data) || !isset($data['action']))
         {
             return;
-        }
-        else if (!FTF_Web::validateConfig())
+        } else if (!FTF_Web::validateConfig())
         {
             FTF_Web::writeErrorResponse("Config.php has not been setup or configured properly.");
-        }
-        else if (!FTF_Web::validateAuthenticated())
+        } else if (!FTF_Web::validateAuthenticated())
         {
             FTF_Web::writeErrorResponse("No user currently authorized to run application. Something went very wrong.");
         }
@@ -78,28 +76,22 @@ class FTF_Web
         if ($action == FTF_Web::ACTION_RUN)
         {
             FTF_Web::filterFollowers($data);
-        }
-        else if ($action == FTF_Web::ACTION_FOLLOW)
+        } else if ($action == FTF_Web::ACTION_FOLLOW)
         {
             FTF_Web::followUser($data);
-        }
-        else if ($action == FTF_Web::ACTION_UNFOLLOW)
+        } else if ($action == FTF_Web::ACTION_UNFOLLOW)
         {
             FTF_Web::unFollowUser($data);
-        }
-        else if ($action == FTF_Web::ACTION_ADD_QUEUE)
+        } else if ($action == FTF_Web::ACTION_ADD_QUEUE)
         {
             FTF_Web::addToQueue($data);
-        }
-        else if ($action == FTF_Web::ACTION_FETCH_QUEUE)
+        } else if ($action == FTF_Web::ACTION_FETCH_QUEUE)
         {
             FTF_Web::fetchQueue($data);
-        }
-        else if ($action == FTF_Web::ACTION_FETCH_USERS_TO_UNFOLLOW)
+        } else if ($action == FTF_Web::ACTION_FETCH_USERS_TO_UNFOLLOW)
         {
             FTF_Web::fetchUnFollowUsers();
-        }
-        else if ($action == FTF_Web::ACTION_SWITCH_USER)
+        } else if ($action == FTF_Web::ACTION_SWITCH_USER)
         {
             FTF_Web::switchUser();
         }
@@ -215,8 +207,7 @@ class FTF_Web
         if (!isset($settings) || !$settings->validate())
         {
             FTF_Web::writeErrorResponse('Settings invalid or not supplied.' . print_r($settings, true));
-        }
-        else
+        } else
         {
             $findToFollow = new FTF_Driver_Filter(FTF_Config::$apiKeys, $settings);
 
@@ -252,14 +243,17 @@ class FTF_Web
      * Write response to browser and mark it as having an error.
      * @param $errorMessage String The error message to write.
      * @param $log String Optional.
+     * @param $continue boolean Set to true if the error should not be considered fatal by the UI and progress
+     * can resume. Optional.
      *
      */
-    public static function writeErrorResponse($errorMessage, $log = '')
+    public static function writeErrorResponse($errorMessage, $log = '', $continue = false)
     {
         $response = new FTF_WebResponse();
         $response->hasError = true;
         $response->errorMessage = $errorMessage;
         $response->log = $log;
+        $response->continue = $continue;
 
         echo json_encode($response);
         exit(3);
@@ -298,12 +292,10 @@ class FTF_Web
         if (!class_exists('FTF_Config'))
         {
             return false;
-        }
-        else if (empty(FTF_Config::$twitterUsername) || FTF_Config::$twitterUsername == 'CHANGE_THIS')
+        } else if (empty(FTF_Config::$twitterUsername) || FTF_Config::$twitterUsername == 'CHANGE_THIS')
         {
             return false;
-        }
-        else if (FTF_Config::$apiKeys['consumer_key'] == 'CHANGE_THIS'
+        } else if (FTF_Config::$apiKeys['consumer_key'] == 'CHANGE_THIS'
             || FTF_Config::$apiKeys['consumer_secret'] == 'CHANGE_THIS'
         )
         {

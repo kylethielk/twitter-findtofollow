@@ -64,6 +64,27 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
     }
 
     /**
+     * Parses a response received from twitter and will return an array of the codes.
+     * @param $response Object The response object received from Twitter that contains errors.
+     * @return array Empty array if no error, array of error code strings otherwise.
+     */
+    public static function parseErrorCodesFromResponse($response)
+    {
+        $errorCodes = array();
+        if ($response && isset($response->errors))
+        {
+            $errors = $response->errors;
+
+            foreach ($errors as $error)
+            {
+                $errorCodes[] = $error->code;
+            }
+        }
+
+        return $errorCodes;
+    }
+
+    /**
      * Pull all friend ids for the supplied user.
      * @param string $username The username to pull friend ids for.
      * @param int $cursor The twitter api cursor.
@@ -85,14 +106,12 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
             if ($response->next_cursor > 0)
             {
                 return array_merge($response->ids, $this->twitterFriendsIds($username, $response->next_cursor_str));
-            }
-            else
+            } else
             {
                 return $response->ids;
             }
 
-        }
-        else
+        } else
         {
             $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
             FTF_Web::writeErrorResponse($errorMessage, $this->generateLog());
@@ -135,13 +154,11 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
             if ($response->next_cursor > 0)
             {
                 return array_merge($response->ids, $this->twitterFollowersIds($username, $maximum - $count, $response->next_cursor_str));
-            }
-            else
+            } else
             {
                 return $response->ids;
             }
-        }
-        else
+        } else
         {
             $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
             FTF_Web::writeErrorResponse($errorMessage, $this->generateLog());
@@ -220,8 +237,7 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
             if ($errorMessage === false)
             {
                 return $users;
-            }
-            else
+            } else
             {
                 $this->addLogMessage("We received a bad response from twitter: " . $errorMessage);
                 return array();
@@ -249,8 +265,7 @@ class FTF_Driver_Twitter extends FTF_Driver_Base
             if (in_array($id, FTF_UserData::getUserData()->cachedUserIds))
             {
                 $returnObject->cachedUserIds[] = $id;
-            }
-            else
+            } else
             {
                 $returnObject->freshUserIds[] = $id;
             }

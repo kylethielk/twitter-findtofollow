@@ -746,13 +746,20 @@ var FindToFollow = new function()
                 {
                     response = JSON.parse(response);
 
-                    if (response.hasError)
+                    if (response.hasError && !response.continue)
                     {
                         FindToFollow.showErrorMessage("Error from twitter. Stopping all follows. [" + response.errorMessage + "]");
                         FindToFollow.Follow.postFollowTeardown();
                     }
                     else
                     {
+                        if(response.hasError && response.continue)
+                        {
+                            //There was an error but we can skip
+                            FindToFollow.showErrorMessage(response.errorMessage);
+
+                        }
+
                         //Remove the row from UI
                         $("#" + rowId).remove();
 

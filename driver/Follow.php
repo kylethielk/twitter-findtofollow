@@ -47,6 +47,24 @@ class FTF_Driver_Follow extends FTF_Driver_Twitter
     }
 
     /**
+     * Checks an array of error codes to see if one of them means the user is no longer valid
+     * and can thus be removed from queue.
+     * @param $errorCodeArray Array of error codes.
+     * @return boolean True if yes, false otherwise.
+     */
+    private function userDoesNotExist($errorCodeArray)
+    {
+        foreach ($errorCodeArray as $key => $code)
+        {
+            if ($code == 34)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Start the call to the Twitter API to follow the user specified in our $followRequest.
      * This method is terminating.
      */
@@ -64,11 +82,21 @@ class FTF_Driver_Follow extends FTF_Driver_Twitter
 
         if ($errorMessage !== false)
         {
+            $errorCodes = $this->parseErrorCodesFromResponse($response);
 
-            FTF_Web::writeErrorResponse("Received error from twitter: " . $errorMessage);
+            if ($this->userDoesNotExist($errorCodes))
+            {
+                //Remove user from queue if error
+                FTF_UserData::getUserData()->removeUserIdFromQueue($this->followRequest->toFollowUserId);
+                FTF_UserData::getUserData()->flushPrimaryUserData();
+                FTF_Web::writeErrorResponse("Received error from twitter: " . $errorMessage . ". Removing user from queue.", '', true);
+            } else
+            {
+                FTF_Web::writeErrorResponse("Received error from twitter: " . $errorMessage);
+            }
+
             return;
-        }
-        else
+        } else
         {
             //We successfully followed user, add them to our list.
             FTF_UserData::getUserData()->mergeInFriendIds(array($this->followRequest->toFollowUserId));

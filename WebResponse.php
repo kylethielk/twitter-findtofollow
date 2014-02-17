@@ -34,6 +34,7 @@ class FTF_WebResponse
     public $errorMessage = '';
     public $html = '';
     public $log = '';
+    public $continue = false;
 }
 
 ?>
